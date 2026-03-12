@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { type DatasetRow, generateDataset, datasetToCSV } from "@/lib/feistel";
+import { MLEvaluator } from "./ml-evaluator";
 import { Database, Download } from "lucide-react";
 
 export function DatasetGenerator() {
@@ -172,6 +173,20 @@ export function DatasetGenerator() {
             <div className="px-3 py-2 text-[10px] font-mono text-muted-foreground bg-secondary/30 border-t border-border">
               Showing first {preview?.length} of {dataset.length} rows
             </div>
+          </div>
+
+          {/* ML Evaluator */}
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="mb-4">
+              <h3 className="text-sm font-mono font-bold text-foreground">
+                Machine Learning Evaluation
+              </h3>
+              <p className="text-xs text-muted-foreground font-mono mt-1">
+                Train a Naive Bayes classifier to distinguish Feistel ciphertexts
+                from random data using statistical features.
+              </p>
+            </div>
+            <MLEvaluator dataset={dataset} />
           </div>
         </div>
       )}

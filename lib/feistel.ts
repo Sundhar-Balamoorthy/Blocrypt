@@ -204,6 +204,39 @@ export function runFullCycle(
   };
 }
 
+
+// --- Bit Flip Simulation Helper ---
+
+export interface BitFlipSimulation {
+  originalCipher: Bit[];
+  flippedCipher: Bit[];
+  diff: boolean[];
+}
+
+/**
+ * Runs encryption on the given plaintext, then flips a specified bit and
+ * encrypts again. Returns both ciphertexts and a mask indicating which bits
+ * differ. Useful for visualizing avalanche/bit‑flip effects.
+ */
+export function simulateBitFlip(
+  plaintext: Bit[],
+  flipIndex: number,
+  totalRounds: number,
+  keys: number[]
+): BitFlipSimulation {
+  const orig = runFullCycle(plaintext, totalRounds, keys);
+  const originalCipher = orig.ciphertext;
+
+  const flippedPlain = [...plaintext] as Bit[];
+  flippedPlain[flipIndex] = (flippedPlain[flipIndex] ^ 1) as Bit;
+
+  const flipped = runFullCycle(flippedPlain, totalRounds, keys);
+  const flippedCipher = flipped.ciphertext;
+
+  const diff = originalCipher.map((b, i) => b !== flippedCipher[i]);
+  return { originalCipher, flippedCipher, diff };
+}
+
 // --- Dataset Generation ---
 
 export interface DatasetRow {

@@ -23,10 +23,13 @@ import { DatasetGenerator } from "@/components/blocrypt/dataset-generator";
 import { Lock, Unlock } from "lucide-react";
 
 const initialPlaintext = DEFAULT_PLAINTEXT as Bit[];
+const MIN_ROUNDS = 1;
+const MAX_ROUNDS = 16;
 
 export default function HomePage() {
+  const [configuredRounds, setConfiguredRounds] = useState(DEFAULT_ROUNDS);
   const [state, setState] = useState<FeistelState>(() =>
-    createInitialState(initialPlaintext, DEFAULT_ROUNDS, DEFAULT_KEYS)
+    createInitialState(initialPlaintext, configuredRounds, DEFAULT_KEYS)
   );
 
   const handleNextRound = useCallback(() => {
@@ -39,9 +42,9 @@ export default function HomePage() {
 
   const handleReset = useCallback(() => {
     setState(
-      createInitialState(initialPlaintext, DEFAULT_ROUNDS, DEFAULT_KEYS)
+      createInitialState(initialPlaintext, configuredRounds, DEFAULT_KEYS)
     );
-  }, []);
+  }, [configuredRounds]);
 
   const handleFlipBit = useCallback((index: number) => {
     setState((prev) => flipBit(prev, index));
@@ -55,11 +58,19 @@ export default function HomePage() {
       const currentBits = [...prev.L, ...prev.R] as Bit[];
       return createInitialState(
         currentBits,
-        DEFAULT_ROUNDS,
+        configuredRounds,
         DEFAULT_KEYS,
         newMode
       );
     });
+  }, [configuredRounds]);
+
+  const handleRoundsChange = useCallback((newRounds: number) => {
+    setConfiguredRounds(newRounds);
+    // Reset simulator with new rounds
+    setState(
+      createInitialState(initialPlaintext, newRounds, DEFAULT_KEYS)
+    );
   }, []);
 
   return (
@@ -149,10 +160,12 @@ export default function HomePage() {
                 </div>
 
                 {/* Config display */}
-                <div className="flex flex-col gap-1.5 p-3 rounded-lg bg-card border border-border">
-                  <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
-                    Configuration
-                  </span>
+                <div className="flex flex-col gap-3 p-3 rounded-lg bg-card border border-border">
+                  <div>
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+                      Configuration
+                    </span>
+                  </div>
                   <div className="text-xs font-mono text-foreground">
                     <span className="text-muted-foreground">Plaintext: </span>
                     [{initialPlaintext.join(", ")}]
@@ -161,9 +174,29 @@ export default function HomePage() {
                     <span className="text-muted-foreground">Keys: </span>[
                     {DEFAULT_KEYS.join(", ")}]
                   </div>
-                  <div className="text-xs font-mono text-foreground">
-                    <span className="text-muted-foreground">Rounds: </span>
-                    {DEFAULT_ROUNDS}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono text-muted-foreground">
+                        Rounds:
+                      </span>
+                      <span className="text-xs font-mono font-bold text-foreground">
+                        {configuredRounds}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={MIN_ROUNDS}
+                      max={MAX_ROUNDS}
+                      value={configuredRounds}
+                      onChange={(e) =>
+                        handleRoundsChange(parseInt(e.target.value, 10))
+                      }
+                      className="w-full h-1.5 bg-muted rounded accent-primary"
+                    />
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                      <span>{MIN_ROUNDS}</span>
+                      <span>{MAX_ROUNDS}</span>
+                    </div>
                   </div>
                 </div>
               </aside>
@@ -215,12 +248,15 @@ export default function HomePage() {
                   Encryption + Decryption Round-Trip Verification
                 </h2>
                 <p className="text-xs text-muted-foreground font-mono mt-1">
-                  Encrypts the default plaintext [{initialPlaintext.join(", ")}
-                  ] through {DEFAULT_ROUNDS} rounds, then decrypts the
+                  Encrypts plaintext [{[...state.L, ...state.R].join(", ")}
+                  ] through {configuredRounds} rounds, then decrypts the
                   ciphertext back and verifies round-trip correctness.
                 </p>
               </div>
-              <FullCycleView />
+              <FullCycleView
+                totalRounds={configuredRounds}
+                initialPlaintext={[...state.L, ...state.R] as Bit[]}
+              />
             </div>
           </TabsContent>
 

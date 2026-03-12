@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -15,17 +15,51 @@ import { BitDisplay } from "./bit-display";
 import { RoundSchematic } from "./round-schematic";
 import { Play, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
 
-export function FullCycleView() {
+interface FullCycleViewProps {
+  totalRounds?: number;
+  initialPlaintext?: Bit[];
+}
+
+export function FullCycleView({ totalRounds = DEFAULT_ROUNDS, initialPlaintext }: FullCycleViewProps) {
+  const [plaintext, setPlaintext] = useState<Bit[]>(
+    initialPlaintext ?? (DEFAULT_PLAINTEXT as Bit[])
+  );
   const [result, setResult] = useState<FullCycleResult | null>(null);
+  const [diffMask, setDiffMask] = useState<boolean[]>([]);
+
+  // baseline result for default plaintext (used to highlight ciphertext changes)
+  const baseline = useMemo(
+    () =>
+      runFullCycle(DEFAULT_PLAINTEXT as Bit[], totalRounds, DEFAULT_KEYS),
+    [totalRounds]
+  );
+
+  const handleFlipPlaintext = useCallback((index: number) => {
+    setPlaintext((prev) => {
+      const copy = [...prev];
+      copy[index] = (copy[index] ^ 1) as Bit;
+      return copy;
+    });
+  }, []);
+
+  const handleResetPlaintext = useCallback(() => {
+    const resetValue = initialPlaintext ?? (DEFAULT_PLAINTEXT as Bit[]);
+    setPlaintext(resetValue);
+    setResult(null);
+    setDiffMask([]);
+  }, [initialPlaintext]);
 
   const handleRunCycle = useCallback(() => {
-    const r = runFullCycle(
-      DEFAULT_PLAINTEXT as Bit[],
-      DEFAULT_ROUNDS,
-      DEFAULT_KEYS
-    );
+    const r = runFullCycle(plaintext, totalRounds, DEFAULT_KEYS);
     setResult(r);
-  }, []);
+
+    if (baseline) {
+      const mask = r.ciphertext.map(
+        (bit, i) => bit !== baseline.ciphertext[i]
+      );
+      setDiffMask(mask);
+    }
+  }, [plaintext, baseline, totalRounds]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -34,23 +68,32 @@ export function FullCycleView() {
           <Play className="h-4 w-4" />
           Run Full Cycle
         </Button>
+        <Button
+          variant="secondary"
+          onClick={handleResetPlaintext}
+          className="gap-1.5"
+        >
+          Reset Plaintext
+        </Button>
         <span className="text-xs text-muted-foreground font-mono">
-          Encrypt {DEFAULT_ROUNDS} rounds, then Decrypt {DEFAULT_ROUNDS} rounds
+          Encrypt {totalRounds} rounds, then Decrypt {totalRounds} rounds
         </span>
       </div>
 
       {result && (
         <ScrollArea className="h-[680px] w-full rounded-lg border border-border bg-card">
           <div className="p-6 flex flex-col gap-6">
-            {/* Original plaintext */}
+            {/* Editable plaintext */}
             <div className="flex flex-col gap-1.5 p-3 rounded-lg bg-secondary/40 border border-border">
               <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
-                Original Plaintext
+                Plaintext (click bits to flip)
               </span>
               <BitDisplay
-                bits={result.original}
+                bits={plaintext}
                 label="Plaintext"
                 variant="l"
+                clickable
+                onBitClick={handleFlipPlaintext}
               />
             </div>
 
@@ -83,6 +126,7 @@ export function FullCycleView() {
                 bits={result.ciphertext}
                 label="Cipher"
                 variant="f"
+                highlight={diffMask}
               />
             </div>
 

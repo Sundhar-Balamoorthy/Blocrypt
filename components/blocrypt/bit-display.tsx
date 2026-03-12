@@ -9,6 +9,8 @@ interface BitDisplayProps {
   variant?: "l" | "r" | "f" | "key" | "xor" | "default";
   clickable?: boolean;
   onBitClick?: (index: number) => void;
+  /** Optional mask of bits to highlight (e.g. changed bits) */
+  highlight?: boolean[];
   className?: string;
 }
 
@@ -36,6 +38,7 @@ export function BitDisplay({
   variant = "default",
   clickable = false,
   onBitClick,
+  highlight,
   className,
 }: BitDisplayProps) {
   return (
@@ -49,29 +52,33 @@ export function BitDisplay({
         {label}
       </span>
       <div className="flex gap-1">
-        {bits.map((bit, i) => (
-          <button
-            key={i}
-            disabled={!clickable}
-            onClick={() => clickable && onBitClick?.(i)}
-            className={cn(
-              "w-9 h-9 flex items-center justify-center rounded font-mono text-sm font-bold transition-all duration-200",
-              bit === 1
-                ? cn(variantColors[variant], "text-foreground")
-                : "bg-[var(--bit-0)] text-muted-foreground",
-              clickable &&
-                "cursor-pointer hover:ring-2 hover:ring-ring hover:scale-110",
-              !clickable && "cursor-default"
-            )}
-            aria-label={
-              clickable
-                ? `Bit ${i}: ${bit}. Click to flip.`
-                : `Bit ${i}: ${bit}`
-            }
-          >
-            {bit}
-          </button>
-        ))}
+        {bits.map((bit, i) => {
+          const isHighlighted = highlight?.[i];
+          return (
+            <button
+              key={i}
+              disabled={!clickable}
+              onClick={() => clickable && onBitClick?.(i)}
+              className={cn(
+                "w-9 h-9 flex items-center justify-center rounded font-mono text-sm font-bold transition-all duration-200",
+                bit === 1
+                  ? cn(variantColors[variant], "text-foreground")
+                  : "bg-[var(--bit-0)] text-muted-foreground",
+                clickable &&
+                  "cursor-pointer hover:ring-2 hover:ring-ring hover:scale-110",
+                isHighlighted && "ring-2 ring-red-400",
+                !clickable && "cursor-default"
+              )}
+              aria-label={
+                clickable
+                  ? `Bit ${i}: ${bit}. Click to flip.`
+                  : `Bit ${i}: ${bit}`
+              }
+            >
+              {bit}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
