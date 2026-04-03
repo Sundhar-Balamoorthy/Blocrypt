@@ -40,7 +40,11 @@ export function FeistelControls({
         </div>
         <div className="flex items-center gap-1.5 rounded-md bg-secondary px-3 py-1.5">
           <span className="text-xs font-mono text-muted-foreground">MODE</span>
-          <span className="font-mono text-sm font-bold text-foreground uppercase">
+          <span
+            className={`font-mono text-sm font-bold uppercase ${
+              mode === "encryption" ? "text-[var(--bit-l)]" : "text-[var(--bit-r)]"
+            }`}
+          >
             {mode === "encryption" ? "ENC" : "DEC"}
           </span>
         </div>

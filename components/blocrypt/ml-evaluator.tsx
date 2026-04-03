@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Brain, BarChart3, CheckCircle2 } from "lucide-react";
 import type { DatasetRow } from "@/lib/feistel";
 
 interface MLEvaluatorProps {
   dataset: DatasetRow[];
+  cipher?: "feistel" | "sdes" | "present";
 }
 
 interface MLMetrics {
@@ -24,14 +25,19 @@ interface MLMetrics {
   train_samples?: number;
 }
 
-const API_URL = "https://jubilant-trout-v6pxrjx775qrcxwjv-8000.app.github.dev";
+const API_URL = "http://localhost:8000";
 
-export function MLEvaluator({ dataset }: MLEvaluatorProps) {
+export function MLEvaluator({ dataset, cipher = "feistel" }: MLEvaluatorProps) {
   const [training, setTraining] = useState(false);
   const [metrics, setMetrics] = useState<MLMetrics | null>(null);
   const [trainSize, setTrainSize] = useState(0.8);
-  const [modelType, setModelType] = useState<"nb" | "lr">("nb");
+  const [modelType, setModelType] = useState<"rf" | "lr" | "mlp">("rf");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMetrics(null);
+    setError(null);
+  }, [dataset, cipher, modelType, trainSize]);
 
 
   const handleTrain = useCallback(async () => {
@@ -76,15 +82,15 @@ export function MLEvaluator({ dataset }: MLEvaluatorProps) {
         <span className="text-xs font-mono text-muted-foreground">Model:</span>
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => setModelType("nb")}
+            onClick={() => setModelType("rf")}
             disabled={training}
             className={`px-3 py-1.5 text-xs font-mono rounded font-semibold transition-colors ${
-              modelType === "nb"
+              modelType === "rf"
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
             }`}
           >
-            Naive Bayes
+            Random Forest
           </button>
           <button
             onClick={() => setModelType("lr")}
@@ -95,7 +101,18 @@ export function MLEvaluator({ dataset }: MLEvaluatorProps) {
                 : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
             }`}
           >
-            Logistic Regr.
+            Logistic Regression
+          </button>
+          <button
+            onClick={() => setModelType("mlp")}
+            disabled={training}
+            className={`px-3 py-1.5 text-xs font-mono rounded font-semibold transition-colors ${
+              modelType === "mlp"
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+            }`}
+          >
+            Multi Layer Perceptron
           </button>
         </div>
       </div>
@@ -214,11 +231,13 @@ export function MLEvaluator({ dataset }: MLEvaluatorProps) {
             <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
             <div className="text-xs text-muted-foreground font-mono">
               <p>
-                The <span className="text-foreground font-bold">{modelType === "nb" ? "Naive Bayes" : "Logistic Regression"}</span> model achieves{" "}
+                The <span className="text-foreground font-bold">
+                  {modelType === "rf" ? "Random Forest" : modelType === "mlp" ? "Multi Layer Perceptron" : "Logistic Regression"}
+                </span> model achieves{" "}
                 <span className="text-foreground font-bold">
                   {(metrics.accuracy * 100).toFixed(1)}%
                 </span>{" "}
-                accuracy distinguishing Feistel ciphertexts from random data
+                accuracy distinguishing {cipher === "sdes" ? "S-DES" : cipher === "present" ? "PRESENT" : "Feistel"} ciphertexts from random data
                 using statistical features extracted from bit sequences.
               </p>
             </div>

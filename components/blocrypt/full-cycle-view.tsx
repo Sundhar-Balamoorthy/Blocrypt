@@ -18,9 +18,14 @@ import { Play, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
 interface FullCycleViewProps {
   totalRounds?: number;
   initialPlaintext?: Bit[];
+  keys?: number[];
 }
 
-export function FullCycleView({ totalRounds = DEFAULT_ROUNDS, initialPlaintext }: FullCycleViewProps) {
+export function FullCycleView({ 
+  totalRounds = DEFAULT_ROUNDS, 
+  initialPlaintext,
+  keys = DEFAULT_KEYS
+}: FullCycleViewProps) {
   const [plaintext, setPlaintext] = useState<Bit[]>(
     initialPlaintext ?? (DEFAULT_PLAINTEXT as Bit[])
   );
@@ -30,8 +35,8 @@ export function FullCycleView({ totalRounds = DEFAULT_ROUNDS, initialPlaintext }
   // baseline result for default plaintext (used to highlight ciphertext changes)
   const baseline = useMemo(
     () =>
-      runFullCycle(DEFAULT_PLAINTEXT as Bit[], totalRounds, DEFAULT_KEYS),
-    [totalRounds]
+      runFullCycle(DEFAULT_PLAINTEXT as Bit[], totalRounds, keys),
+    [totalRounds, keys]
   );
 
   const handleFlipPlaintext = useCallback((index: number) => {
@@ -50,7 +55,7 @@ export function FullCycleView({ totalRounds = DEFAULT_ROUNDS, initialPlaintext }
   }, [initialPlaintext]);
 
   const handleRunCycle = useCallback(() => {
-    const r = runFullCycle(plaintext, totalRounds, DEFAULT_KEYS);
+    const r = runFullCycle(plaintext, totalRounds, keys);
     setResult(r);
 
     if (baseline) {
@@ -59,7 +64,7 @@ export function FullCycleView({ totalRounds = DEFAULT_ROUNDS, initialPlaintext }
       );
       setDiffMask(mask);
     }
-  }, [plaintext, baseline, totalRounds]);
+  }, [plaintext, baseline, totalRounds, keys]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -108,10 +113,10 @@ export function FullCycleView({ totalRounds = DEFAULT_ROUNDS, initialPlaintext }
               </div>
 
               {result.encryptionHistory.map((round, i) => (
-                <div key={`enc-${i}`} className="flex flex-col items-center gap-1">
+                <div key={`enc-${i}`} className="flex flex-col items-center gap-1 mb-6">
                   <RoundSchematic round={round} phase="encryption" />
                   {i < result.encryptionHistory.length - 1 && (
-                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                    <ChevronDown className="h-5 w-5 text-muted-foreground mt-4" />
                   )}
                 </div>
               ))}
@@ -141,10 +146,10 @@ export function FullCycleView({ totalRounds = DEFAULT_ROUNDS, initialPlaintext }
               </div>
 
               {result.decryptionHistory.map((round, i) => (
-                <div key={`dec-${i}`} className="flex flex-col items-center gap-1">
+                <div key={`dec-${i}`} className="flex flex-col items-center gap-1 mb-6">
                   <RoundSchematic round={round} phase="decryption" />
                   {i < result.decryptionHistory.length - 1 && (
-                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                    <ChevronDown className="h-5 w-5 text-muted-foreground mt-4" />
                   )}
                 </div>
               ))}

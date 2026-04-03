@@ -140,3 +140,58 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .no-number-spinner::-webkit-inner-spin-button,
+  .no-number-spinner::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .no-number-spinner {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
+
+/* ─── S-DES Schematic animation keyframes ─────────────────────────────── */
+
+@keyframes stagger-fade {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes dash-flow {
+  from { stroke-dashoffset: var(--dash-len, 300); }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+@keyframes packet-travel {
+  from { offset-distance: 0%; opacity: 1; }
+  90%  { opacity: 1; }
+  to   { offset-distance: 100%; opacity: 0; }
+}
+
+@keyframes wire-appear {
+  from { stroke-dashoffset: var(--dash-len, 300); opacity: 0; }
+  10%  { opacity: 1; }
+  to   { stroke-dashoffset: 0; opacity: 1; }
+}
+
+@keyframes block-activate {
+  0%   { filter: brightness(0.4); }
+  60%  { filter: brightness(1.3); }
+  100% { filter: brightness(1); }
+}
+
+.sdes-active-block {
+  animation: block-activate 0.5s ease-out forwards;
+}
+
+.sdes-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}

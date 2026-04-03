@@ -7,9 +7,10 @@ import numpy as np
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 
 scaler = StandardScaler()
 
@@ -53,21 +54,22 @@ def run_length_features(bits: np.ndarray) -> List[float]:
     return [longest_run, avg_run, run_count]
 
 
-def extract_statistical_features(bits: List[int]) -> List[float]:
+def extract_statistical_features(ciphertext: List[int], plaintext: Optional[List[int]] = None) -> List[float]:
     """
-    Extract statistical features from bit sequence.
+    Extract statistical features from bit sequences.
 
     Features:
-    1. Hamming weight
-    2. Alternating pattern distance
-    3. Bit transition rate
-    4. Shannon entropy
-    5. Autocorrelation
-    6–9. Bigram frequencies
-    10–12. Run-length features
+    1. Hamming weight (C)
+    2. Alternating pattern distance (C)
+    3. Bit transition rate (C)
+    4. Shannon entropy (C)
+    5. Autocorrelation (C)
+    6–9. Bigram frequencies (C)
+    10–12. Run-length features (C)
+    13-15. Relationship features (if P is provided)
     """
 
-    bits = np.array(bits)
+    bits = np.array(ciphertext)
     n = len(bits)
     features = []
 
@@ -108,6 +110,25 @@ def extract_statistical_features(bits: List[int]) -> List[float]:
     # Feature 10–12: Run length features
     features.extend(run_length_features(bits))
 
+    # Feature 13-15: Relationship features (Plaintext vs Ciphertext)
+    if plaintext is not None and len(plaintext) == n:
+        p_bits = np.array(plaintext)
+        
+        # 13. Hamming Distance
+        hamming_dist = np.sum(bits != p_bits) / n
+        features.append(float(hamming_dist))
+        
+        # 14. XOR Hamming Weight (P XOR C)
+        xor_weight = np.sum(bits ^ p_bits) / n
+        features.append(float(xor_weight))
+        
+        # 15. Bit-wise Correlation
+        correlation = np.corrcoef(bits, p_bits)[0, 1] if np.std(bits) > 0 and np.std(p_bits) > 0 else 0
+        features.append(float(correlation))
+    else:
+        # Padding for consistency if P is not provided
+        features.extend([0.0, 0.0, 0.0])
+
     return features
 
 
@@ -117,7 +138,10 @@ def prepare_data(dataset: List[Dict]) -> Tuple[np.ndarray, np.ndarray]:
     y = []
 
     for row in dataset:
-        features = extract_statistical_features(row['ciphertext'])
+        features = extract_statistical_features(
+            row['ciphertext'], 
+            row.get('plaintext')
+        )
         X.append(features)
         y.append(row['label'])
 
@@ -156,6 +180,25 @@ def train_random_forest(X_train: np.ndarray, y_train: np.ndarray) -> RandomFores
         n_estimators=200,
         max_depth=10,
         random_state=42
+    )
+    model.fit(X_train, y_train)
+    return model
+
+
+def train_mlp(X_train: np.ndarray, y_train: np.ndarray) -> MLPClassifier:
+    """Train Multi-Layer Perceptron (Neural Network) classifier."""
+    model = MLPClassifier(
+        hidden_layer_sizes=(64, 32),
+        activation='relu',
+        solver='adam',
+        alpha=0.0001,
+        batch_size='auto',
+        learning_rate='constant',
+        learning_rate_init=0.001,
+        max_iter=1000,
+        random_state=42,
+        early_stopping=True,
+        validation_fraction=0.1
     )
     model.fit(X_train, y_train)
     return model

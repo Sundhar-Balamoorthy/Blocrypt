@@ -259,7 +259,7 @@ export function generateDataset(
   // Valid ciphertext samples (label = 1)
   for (let i = 0; i < halfSamples; i++) {
     const p = randomBits(8);
-    let state = createInitialState(p, 4, keys, "encryption");
+    let state = createInitialState(p, keys.length, keys, "encryption");
     state = runAllRounds(state);
     dataset.push({
       plaintext: p,
@@ -281,9 +281,14 @@ export function generateDataset(
 }
 
 export function datasetToCSV(dataset: DatasetRow[]): string {
+  if (!dataset || dataset.length === 0) return "";
+  
+  const pLen = dataset[0].plaintext.length;
+  const cLen = dataset[0].ciphertext.length;
+
   const headers = [
-    ...Array.from({ length: 8 }, (_, i) => `P${i}`),
-    ...Array.from({ length: 8 }, (_, i) => `C${i}`),
+    ...Array.from({ length: pLen }, (_, i) => `P${i}`),
+    ...Array.from({ length: cLen }, (_, i) => `C${i}`),
     "Label",
   ].join(",");
 

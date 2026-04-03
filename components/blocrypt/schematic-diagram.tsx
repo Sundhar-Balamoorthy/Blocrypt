@@ -18,7 +18,7 @@ export function SchematicDiagram({ state }: SchematicDiagramProps) {
   const rOut = lastRound ? lastRound.newR : state.R;
 
   const W = 500;
-  const H = lastRound ? 500 : 180;
+  const H = lastRound ? 560 : 200;
 
   // Key x positions
   const lCenter = 125; // L column center
@@ -29,9 +29,9 @@ export function SchematicDiagram({ state }: SchematicDiagramProps) {
 
   // Key y positions
   const inputY = 50;
-  const fY = 190;
-  const xorY = 280;
-  const outputY = 420;
+  const fY = 220;
+  const xorY = 320;
+  const outputY = 480;
   const fR = 32;
   const xorR = 22;
 

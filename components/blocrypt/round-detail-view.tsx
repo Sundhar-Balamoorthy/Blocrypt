@@ -35,7 +35,7 @@ export function RoundDetailView({ state }: RoundDetailViewProps) {
         <BitDisplay bits={lastRound.prevL} label="Input L" variant="l" />
         <BitDisplay bits={lastRound.prevR} label="Input R" variant="r" />
 
-        <div className="border-t border-border my-1" />
+        <div className="border-t border-border my-3" />
 
         <BitDisplay
           bits={lastRound.roundKeyBits}
@@ -61,7 +61,7 @@ export function RoundDetailView({ state }: RoundDetailViewProps) {
           variant="xor"
         />
 
-        <div className="border-t border-border my-1" />
+        <div className="border-t border-border my-3" />
 
         <BitDisplay bits={lastRound.newL} label="Output L" variant="l" />
         <BitDisplay bits={lastRound.newR} label="Output R" variant="r" />

@@ -45,7 +45,7 @@ export function BitDisplay({
     <div className={cn("flex items-center gap-3", className)}>
       <span
         className={cn(
-          "w-40 text-right text-xs font-mono font-semibold shrink-0",
+          "w-20 text-right text-[10px] leading-tight font-mono font-semibold shrink-0 break-words",
           variantLabelColors[variant]
         )}
       >
@@ -60,7 +60,7 @@ export function BitDisplay({
               disabled={!clickable}
               onClick={() => clickable && onBitClick?.(i)}
               className={cn(
-                "w-9 h-9 flex items-center justify-center rounded font-mono text-sm font-bold transition-all duration-200",
+                "w-9 h-9 shrink-0 flex items-center justify-center rounded font-mono text-sm font-bold transition-all duration-200",
                 bit === 1
                   ? cn(variantColors[variant], "text-foreground")
                   : "bg-[var(--bit-0)] text-muted-foreground",

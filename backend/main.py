@@ -11,8 +11,9 @@ from sklearn.model_selection import train_test_split
 
 from ml_models import (
     prepare_data,
-    train_naive_bayes,
+    train_random_forest,
     train_logistic_regression,
+    train_mlp,
     evaluate_model
 )
 
@@ -42,7 +43,7 @@ class DatasetRow(BaseModel):
 
 class TrainingRequest(BaseModel):
     dataset: List[DatasetRow]
-    model_type: str  # "nb" or "lr"
+    model_type: str  # "rf", "lr", or "mlp"
     test_size: float = 0.2
 
 
@@ -85,8 +86,8 @@ async def train_model(request: TrainingRequest):
         if not request.dataset:
             raise HTTPException(status_code=400, detail="Dataset is empty")
         
-        if request.model_type not in ["nb", "lr"]:
-            raise HTTPException(status_code=400, detail="Model type must be 'nb' or 'lr'")
+        if request.model_type not in ["rf", "lr", "mlp"]:
+            raise HTTPException(status_code=400, detail="Model type must be 'rf', 'lr', or 'mlp'")
         
         if not (0.0 < request.test_size < 1.0):
             raise HTTPException(status_code=400, detail="test_size must be between 0 and 1")
@@ -103,8 +104,10 @@ async def train_model(request: TrainingRequest):
         )
         
         # Train model based on type
-        if request.model_type == "nb":
-            model = train_naive_bayes(X_train, y_train)
+        if request.model_type == "rf":
+            model = train_random_forest(X_train, y_train)
+        elif request.model_type == "mlp":
+            model = train_mlp(X_train, y_train)
         else:  # lr
             model = train_logistic_regression(X_train, y_train)
         
@@ -113,7 +116,11 @@ async def train_model(request: TrainingRequest):
         metrics = evaluate_model(y_test, y_pred)
         
         return TrainingResponse(
-            **metrics,
+            accuracy=metrics["accuracy"],
+            precision=metrics["precision"],
+            recall=metrics["recall"],
+            f1=metrics["f1"],
+            confusion_matrix=metrics["confusion_matrix"],
             test_samples=len(X_test),
             train_samples=len(X_train),
             model_type=request.model_type
@@ -133,13 +140,7 @@ async def train_batch(request: TrainingRequest):
     try:
         results = {}
         
-        for model_type in ["nb", "lr"]:
-            req = TrainingRequest(
-                dataset=request.dataset,
-                model_type=model_type,
-                test_size=request.test_size
-            )
-            
+        for model_type in ["rf", "lr"]:
             X, y = prepare_data([row.dict() for row in request.dataset])
             X_train, X_test, y_train, y_test = train_test_split(
                 X, y,
@@ -148,8 +149,10 @@ async def train_batch(request: TrainingRequest):
                 stratify=y
             )
             
-            if model_type == "nb":
-                model = train_naive_bayes(X_train, y_train)
+            if model_type == "rf":
+                model = train_random_forest(X_train, y_train)
+            elif model_type == "mlp":
+                model = train_mlp(X_train, y_train)
             else:
                 model = train_logistic_regression(X_train, y_train)
             

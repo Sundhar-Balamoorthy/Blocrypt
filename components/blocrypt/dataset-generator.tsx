@@ -12,39 +12,58 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { type DatasetRow, generateDataset, datasetToCSV } from "@/lib/feistel";
+import { generateSDESDataset } from "@/lib/sdes";
+import type { SDESDatasetRow } from "@/lib/sdes";
+import { generatePRESENTDataset } from "@/lib/present";
+import type { PRESENTDatasetRow } from "@/lib/present";
 import { MLEvaluator } from "./ml-evaluator";
 import { Database, Download } from "lucide-react";
 
-export function DatasetGenerator() {
+type AnyDatasetRow = DatasetRow | SDESDatasetRow | PRESENTDatasetRow;
+
+interface DatasetGeneratorProps {
+  cipher?: "feistel" | "sdes" | "present";
+  keys?: number[];
+}
+
+export function DatasetGenerator({ cipher = "feistel", keys }: DatasetGeneratorProps) {
   const [numSamples, setNumSamples] = useState(1000);
-  const [dataset, setDataset] = useState<DatasetRow[] | null>(null);
+  const [dataset, setDataset] = useState<AnyDatasetRow[] | null>(null);
   const [generating, setGenerating] = useState(false);
 
   const handleGenerate = useCallback(() => {
     setGenerating(true);
     // Use a small timeout so UI updates before heavy computation
     setTimeout(() => {
-      const data = generateDataset(numSamples);
+      const data = cipher === "sdes"
+        ? generateSDESDataset(numSamples)
+        : cipher === "present"
+          ? generatePRESENTDataset(numSamples)
+          : generateDataset(numSamples, keys);
       setDataset(data);
       setGenerating(false);
     }, 50);
-  }, [numSamples]);
+  }, [numSamples, keys, cipher]);
 
   const handleDownload = useCallback(() => {
     if (!dataset) return;
-    const csv = datasetToCSV(dataset);
+    const rows = dataset as DatasetRow[];
+    const csv = datasetToCSV(rows);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "blocrypt_feistel_dataset.csv";
+    link.download = `blocrypt_${cipher}_dataset.csv`;
     link.click();
     URL.revokeObjectURL(url);
   }, [dataset]);
 
   const validCount = dataset?.filter((r) => r.label === 1).length ?? 0;
   const noiseCount = dataset?.filter((r) => r.label === 0).length ?? 0;
-  const preview = dataset?.slice(0, 8);
+  const preview = dataset?.slice(0, 8) ?? [];
+  const pLen = preview[0]?.plaintext.length ?? 8;
+  const cLen = preview[0]?.ciphertext.length ?? 8;
+  const showScroll = pLen + cLen > 16;
 
   return (
     <div className="flex flex-col gap-4">
@@ -106,72 +125,74 @@ export function DatasetGenerator() {
             </span>
           </div>
 
-          {/* Preview Table */}
+          {/* Preview Table with Scroll Area if needed */}
           <div className="rounded-lg border border-border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-secondary/50">
-                  <TableHead className="font-mono text-[10px] py-2 px-2">
-                    #
-                  </TableHead>
-                  {Array.from({ length: 8 }, (_, i) => (
-                    <TableHead
-                      key={`p${i}`}
-                      className="font-mono text-[10px] text-[var(--bit-l)] py-2 px-1.5 text-center"
-                    >
-                      P{i}
+            <div className={showScroll ? "overflow-x-auto max-w-full" : ""}>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-secondary/50">
+                    <TableHead className="font-mono text-[10px] py-2 px-2 sticky left-0 bg-secondary/50">
+                      #
                     </TableHead>
-                  ))}
-                  {Array.from({ length: 8 }, (_, i) => (
-                    <TableHead
-                      key={`c${i}`}
-                      className="font-mono text-[10px] text-[var(--bit-f)] py-2 px-1.5 text-center"
-                    >
-                      C{i}
+                    {Array.from({ length: pLen }, (_, i) => (
+                      <TableHead
+                        key={`p${i}`}
+                        className="font-mono text-[10px] text-[var(--bit-l)] py-2 px-1 text-center min-w-[24px]"
+                      >
+                        P{i}
+                      </TableHead>
+                    ))}
+                    {Array.from({ length: cLen }, (_, i) => (
+                      <TableHead
+                        key={`c${i}`}
+                        className="font-mono text-[10px] text-[var(--bit-f)] py-2 px-1 text-center min-w-[24px]"
+                      >
+                        C{i}
+                      </TableHead>
+                    ))}
+                    <TableHead className="font-mono text-[10px] py-2 px-2 text-center sticky right-0 bg-secondary/50">
+                      Label
                     </TableHead>
-                  ))}
-                  <TableHead className="font-mono text-[10px] py-2 px-2 text-center">
-                    Label
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {preview?.map((row, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="font-mono text-[10px] text-muted-foreground py-1.5 px-2">
-                      {i + 1}
-                    </TableCell>
-                    {row.plaintext.map((bit, j) => (
-                      <TableCell
-                        key={`p${j}`}
-                        className="font-mono text-[10px] py-1.5 px-1.5 text-center text-foreground"
-                      >
-                        {bit}
-                      </TableCell>
-                    ))}
-                    {row.ciphertext.map((bit, j) => (
-                      <TableCell
-                        key={`c${j}`}
-                        className="font-mono text-[10px] py-1.5 px-1.5 text-center text-foreground"
-                      >
-                        {bit}
-                      </TableCell>
-                    ))}
-                    <TableCell
-                      className={`font-mono text-[10px] py-1.5 px-2 text-center font-bold ${
-                        row.label === 1
-                          ? "text-[var(--bit-r)]"
-                          : "text-destructive"
-                      }`}
-                    >
-                      {row.label}
-                    </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {preview?.map((row, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="font-mono text-[10px] text-muted-foreground py-1.5 px-2 sticky left-0 bg-card">
+                        {i + 1}
+                      </TableCell>
+                      {row.plaintext.map((bit, j) => (
+                        <TableCell
+                          key={`p${j}`}
+                          className="font-mono text-[10px] py-1.5 px-0.5 text-center text-foreground"
+                        >
+                          {bit}
+                        </TableCell>
+                      ))}
+                      {row.ciphertext.map((bit, j) => (
+                        <TableCell
+                          key={`c${j}`}
+                          className="font-mono text-[10px] py-1.5 px-0.5 text-center text-foreground"
+                        >
+                          {bit}
+                        </TableCell>
+                      ))}
+                      <TableCell
+                        className={`font-mono text-[10px] py-1.5 px-2 text-center font-bold sticky right-0 bg-card ${
+                          row.label === 1
+                            ? "text-[var(--bit-r)]"
+                            : "text-destructive"
+                        }`}
+                      >
+                        {row.label}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
             <div className="px-3 py-2 text-[10px] font-mono text-muted-foreground bg-secondary/30 border-t border-border">
-              Showing first {preview?.length} of {dataset.length} rows
+              Showing first {preview?.length} of {dataset.length} rows (Block: {pLen} bits)
             </div>
           </div>
 
@@ -182,11 +203,11 @@ export function DatasetGenerator() {
                 Machine Learning Evaluation
               </h3>
               <p className="text-xs text-muted-foreground font-mono mt-1">
-                Train a Naive Bayes classifier to distinguish Feistel ciphertexts
+                Train a Machine Learning classifier to distinguish {cipher === "sdes" ? "S-DES" : cipher === "present" ? "PRESENT" : "Feistel"} ciphertexts
                 from random data using statistical features.
               </p>
             </div>
-            <MLEvaluator dataset={dataset} />
+            <MLEvaluator dataset={dataset as DatasetRow[]} cipher={cipher} />
           </div>
         </div>
       )}

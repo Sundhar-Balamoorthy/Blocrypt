@@ -25,7 +25,7 @@ interface RoundSchematicProps {
  */
 export function RoundSchematic({ round, phase = "encryption" }: RoundSchematicProps) {
   const W = 520;
-  const H = 420;
+  const H = 480;
 
   const lCenter = 130;
   const rCenter = 390;
@@ -34,9 +34,9 @@ export function RoundSchematic({ round, phase = "encryption" }: RoundSchematicPr
   const halfBox = boxW / 2;
 
   const inputY = 30;
-  const fY = 155;
-  const xorY = 240;
-  const outputY = 350;
+  const fY = 180;
+  const xorY = 280;
+  const outputY = 410;
   const fR = 30;
   const xorR = 20;
 
