@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, CheckCircle2, XCircle } from "lucide-react";
+import { Play, CheckCircle2, XCircle, Download } from "lucide-react";
 import {
   type SDESFullCycleResult,
   sdesFullCycle,
@@ -40,6 +40,32 @@ export function SDESFullCycle() {
     if (result) setResult(sdesFullCycle(plaintext, newK as Bit[]));
   }, [plaintext, key10, result]);
 
+  const handleExportPDF = async () => {
+    const element = document.getElementById("sdes-full-cycle-content");
+    if (!element) return;
+    try {
+      const { toPng } = await import("html-to-image");
+      const jsPDFModule = await import("jspdf/dist/jspdf.umd.min.js");
+      const jsPDF = jsPDFModule.jsPDF;
+      
+      const imgData = await toPng(element, { quality: 0.95, backgroundColor: 'hsl(215, 25%, 10%)' });
+      
+      const pdfWidth = 210;
+      const canvas = await new Promise<{width: number, height: number}>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.width, height: img.height });
+        img.src = imgData;
+      });
+      
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: [pdfWidth, pdfHeight] });
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("sdes-full-cycle.pdf");
+    } catch (err) {
+      console.error("Failed to export PDF", err);
+    }
+  };
+
   const fmt = (bits: Bit[]) => `[${bits.join("")}]`;
 
   return (
@@ -65,7 +91,7 @@ export function SDESFullCycle() {
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <Button onClick={handleRun} className="gap-1.5">
             <Play className="h-4 w-4" />
             Run Full Cycle
@@ -73,11 +99,15 @@ export function SDESFullCycle() {
           <Button variant="secondary" onClick={handleReset} className="gap-1.5">
             Reset
           </Button>
+          <Button variant="outline" onClick={handleExportPDF} className="gap-1.5 ml-auto sm:ml-4">
+            <Download className="h-4 w-4" />
+            Export as PDF
+          </Button>
         </div>
       </div>
 
       {result && (
-        <div className="flex flex-col gap-6 p-6 rounded-lg border border-border bg-card">
+        <div id="sdes-full-cycle-content" className="flex flex-col gap-6 p-6 rounded-lg border border-border bg-card">
           {/* Plaintext (showing it again for clarity in result) */}
           <div className="flex flex-col gap-1.5 p-3 rounded-lg bg-secondary/40 border border-border">
             <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">

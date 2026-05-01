@@ -45,18 +45,18 @@ function BitSquare({
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
       {showIndex && index !== undefined && (
-        <div style={{ fontSize: 14, color: "#ffffff", fontFamily: "monospace" }}>{index}</div>
+        <div style={{ fontSize: 20, color: "#ffffff", fontFamily: "monospace", fontWeight: "bold", opacity: 0.9 }}>{index}</div>
       )}
       <div style={{
-        width: size, height: size,
+        width: size === 50 ? 48 : size, height: size === 50 ? 48 : size,
         background: dim ? "#0f1a2a" : bg,
         border: `2px solid ${dim ? "#1e293b" : bdr}`,
         borderRadius: 8,
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: size > 40 ? 20 : 16, fontWeight: "bold", fontFamily: "monospace",
+        fontSize: size === 50 ? 26 : 18, fontWeight: "bold", fontFamily: "monospace",
         color: dim ? "#1e293b" : (val === 1 ? "#fff" : "#cbd5e1"),
         opacity: dim ? 0.35 : 1, transition: "all 0.3s ease",
-        boxShadow: val === 1 && !dim ? `0 0 8px ${bdr}66` : "none",
+        boxShadow: val === 1 && !dim ? `0 0 10px ${bdr}55` : "none",
       }}>
         {val !== null ? val : "?"}
       </div>
@@ -77,8 +77,8 @@ function BitRow({
     }}>
       {label && (
         <div style={{
-          fontSize: 14, fontFamily: "monospace", color: labelColor ?? "#ffffff",
-          textTransform: "uppercase", letterSpacing: 1, fontWeight: "bold",
+          fontSize: 18, fontFamily: "monospace", color: labelColor ?? "#ffffff",
+          textTransform: "uppercase", letterSpacing: 2, fontWeight: "bold",
         }}>{label}</div>
       )}
       <div style={{ display: "flex", gap }}>
@@ -93,13 +93,14 @@ function BitRow({
 
 function SectionLabel({ text, color, sub }: { text: string; color?: string; sub?: string }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, marginBottom: 4 }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, marginBottom: 8 }}>
       <div style={{
-        fontSize: 20, fontWeight: "bold", fontFamily: "monospace",
+        fontSize: 28, fontWeight: "bold", fontFamily: "monospace",
         color: color ?? "#f1f5f9",
-        textShadow: color ? `0 0 24px ${color}66` : "none",
+        textShadow: color ? `0 0 32px ${color}88` : "none",
+        letterSpacing: 2,
       }}>{text}</div>
-      {sub && <div style={{ fontSize: 14, color: "#ffffff", fontFamily: "monospace", textAlign: "center", maxWidth: 560 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 18, color: "#cbd5e1", fontFamily: "monospace", textAlign: "center", maxWidth: 640, fontWeight: "bold" }}>{sub}</div>}
     </div>
   );
 }
@@ -107,7 +108,7 @@ function SectionLabel({ text, color, sub }: { text: string; color?: string; sub?
 function DownArrow({ color, delay = 0 }: { color?: string; delay?: number }) {
   return (
     <div style={{
-      fontSize: 32, color: color ?? "#ffffff", lineHeight: 1, margin: "4px 0",
+      fontSize: 36, color: color ?? "#ffffff", lineHeight: 1, margin: "8px 0", fontWeight: "bold",
       opacity: 0, animation: "stagger-fade 0.5s ease forwards", animationDelay: `${delay}ms`,
     }}>↓</div>
   );
@@ -137,8 +138,8 @@ function XorView({
 // ── Tag helper ────────────────────────────────────────────────────────────────
 function tag(c: string): React.CSSProperties {
   return {
-    fontSize: 12, fontFamily: "monospace", color: c, fontWeight: "bold",
-    background: `${c}18`, border: `1px solid ${c}55`, borderRadius: 4, padding: "2px 10px",
+    fontSize: 14, fontFamily: "monospace", color: "#ffffff", fontWeight: "bold",
+    background: `${c}33`, border: `1.5px solid ${c}88`, borderRadius: 6, padding: "4px 12px",
   };
 }
 
@@ -153,9 +154,9 @@ function btnStyle(bg: string, clr: string): React.CSSProperties {
 }
 
 // ── Layout constants ──────────────────────────────────────────────────────────
-const col: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: 14 };
-const row: React.CSSProperties = { display: "flex", flexDirection: "row", alignItems: "center", gap: 20, flexWrap: "wrap", justifyContent: "center" };
-const note: React.CSSProperties = { fontSize: 15, color: "#ffffff", fontFamily: "monospace", textAlign: "center", maxWidth: 560, lineHeight: 1.6 };
+const col: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: 18 };
+const row: React.CSSProperties = { display: "flex", flexDirection: "row", alignItems: "center", gap: 24, flexWrap: "wrap", justifyContent: "center" };
+const note: React.CSSProperties = { fontSize: 18, color: "#cbd5e1", fontFamily: "monospace", textAlign: "center", maxWidth: 640, lineHeight: 1.6, fontWeight: "bold" };
 
 // ── Main component ────────────────────────────────────────────────────────────
 export function FeistelSchematic({ state }: FeistelSchematicProps) {
@@ -204,6 +205,18 @@ export function FeistelSchematic({ state }: FeistelSchematicProps) {
   const next  = useCallback(() => setSub(p => Math.min(p + 1, TOTAL - 1)), [TOTAL]);
   const prev  = useCallback(() => setSub(p => Math.max(p - 1, 0)), []);
   const reset = useCallback(() => { setSub(0); setPlaying(false); }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") {
+        next();
+      } else if (e.key === "ArrowLeft") {
+        prev();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [next, prev]);
 
   function noData() {
     return (
@@ -523,8 +536,8 @@ export function FeistelSchematic({ state }: FeistelSchematicProps) {
             key={i}
             onClick={() => setSub(i)}
             style={{
-              display: "inline-block", padding: "3px 10px", margin: "0 2px",
-              borderRadius: 4, border: "none", cursor: "pointer", fontSize: 10,
+              display: "inline-block", padding: "5px 12px", margin: "0 3px",
+              borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12,
               background: i === sub ? "#1d4ed8" : (i < sub ? "#1e3a5f" : "transparent"),
               color: i === sub ? "#fff" : (i < sub ? "#93c5fd" : C.dim),
               fontFamily: "monospace", fontWeight: i === sub ? "bold" : "normal",
@@ -554,8 +567,8 @@ export function FeistelSchematic({ state }: FeistelSchematicProps) {
       </div>
 
       {/* ── Main visualization ───────────────────────────────────────────────── */}
-      <div style={{ padding: "28px 32px 32px", minHeight: 420, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto" }}>
-        <div style={{ animation: "fadeSlide 0.3s ease", maxWidth: 760, width: "100%" }}>
+      <div style={{ padding: "16px 32px 32px", display: "flex", alignItems: "flex-start", justifyContent: "center", overflow: "hidden" }}>
+        <div style={{ animation: "fadeSlide 0.3s ease", maxWidth: 760, width: "100%", zoom: 0.75 }}>
           {panel()}
         </div>
       </div>

@@ -31,7 +31,7 @@ export function NibbleRow({
       <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">{label}</span>
       <div className="flex flex-wrap gap-1">
         {Array.from({ length: 16 }, (_, n) => (
-          <div key={n} className="flex gap-0.5 border border-border/50 rounded px-0.5 py-0.5">
+          <div key={n} className="flex gap-0.5 border border-[#334155] rounded px-0.5 py-0.5">
             {bits.slice(n * 4, n * 4 + 4).map((bit, j) => {
               const globalIdx = n * 4 + j;
               return (
@@ -74,7 +74,7 @@ function TableGrid({ title, table, cols }: { title: string; table: number[]; col
         {table.map((val, i) => (
           <div 
             key={i} 
-            className="bg-secondary/30 border border-border/50 rounded p-0.5 text-center font-mono text-[8px]"
+            className="bg-[#1e293b] border border-[#334155] rounded p-0.5 text-center font-mono text-[8px]"
             title={`Index ${i} maps to ${val}`}
           >
             {val}
@@ -115,7 +115,7 @@ function SBoxNibbleDetails({
         <div className="flex gap-0.5" style={{ marginLeft: 32 }}>
           {[0, 1, 2, 3].map(c => (
             <div key={c} className={`w-9 text-center font-mono text-[9px] font-bold rounded py-0.5 ${
-              activeCols.has(c) ? "text-[#f59e0b] bg-[#f59e0b]/15" : "text-muted-foreground"
+              activeCols.has(c) ? "text-[#f59e0b] bg-[#451a03]" : "text-muted-foreground"
             }`}>c{c}</div>
           ))}
         </div>
@@ -123,7 +123,7 @@ function SBoxNibbleDetails({
         {[0, 1, 2, 3].map(r => (
           <div key={r} className="flex gap-0.5 items-center">
             <div className={`w-7 text-center font-mono text-[9px] font-bold rounded py-0.5 ${
-              activeRows.has(r) ? "text-[#f59e0b] bg-[#f59e0b]/15" : "text-muted-foreground"
+              activeRows.has(r) ? "text-[#f59e0b] bg-[#451a03]" : "text-muted-foreground"
             }`}>r{r}</div>
             {[0, 1, 2, 3].map(c => {
               const val = SBOX[r * 4 + c];
@@ -132,7 +132,7 @@ function SBoxNibbleDetails({
                 <div key={c} className={`w-9 h-9 flex items-center justify-center font-mono text-sm font-bold rounded ${
                   isActive
                     ? "bg-[#f59e0b] text-[#0a0f1c] shadow-[0_0_8px_rgba(245,158,11,0.4)]"
-                    : "bg-secondary/30 text-muted-foreground border border-border/50"
+                    : "bg-[#1e293b] text-muted-foreground border border-[#334155]"
                 }`}>
                   {val.toString(16).toUpperCase()}
                 </div>
@@ -145,13 +145,13 @@ function SBoxNibbleDetails({
       {/* Per-nibble lookup cards */}
       <div className="flex flex-wrap gap-1.5">
         {nibbles.map(n => (
-          <div key={n.idx} className="flex flex-col items-center gap-0.5 bg-secondary/20 border border-border/50 rounded p-1.5 min-w-[60px]">
+          <div key={n.idx} className="flex flex-col items-center gap-0.5 bg-[#0f172a] border border-[#334155] rounded p-1.5 min-w-[60px]">
             <span className="text-[8px] font-mono text-muted-foreground font-bold">S{n.idx}</span>
             {/* Input bits */}
             <div className="flex gap-px">
               {n.inNib.map((b, i) => (
                 <div key={i} className={`w-4 h-4 flex items-center justify-center rounded-sm text-[8px] font-mono font-bold ${
-                  b === 1 ? "bg-[#f59e0b]/25 text-[#f59e0b] border border-[#f59e0b]/40" : "bg-muted/30 text-muted-foreground border border-border/30"
+                  b === 1 ? "bg-[#78350f] text-[#f59e0b] border border-[#92400e]" : "bg-[#1e293b] text-muted-foreground border border-[#1e293b]"
                 }`}>{b}</div>
               ))}
             </div>
@@ -166,7 +166,7 @@ function SBoxNibbleDetails({
             <div className="flex gap-px">
               {n.outNib.map((b, i) => (
                 <div key={i} className={`w-4 h-4 flex items-center justify-center rounded-sm text-[8px] font-mono font-bold ${
-                  b === 1 ? "bg-[#f59e0b]/25 text-[#f59e0b] border border-[#f59e0b]/40" : "bg-muted/30 text-muted-foreground border border-border/30"
+                  b === 1 ? "bg-[#78350f] text-[#f59e0b] border border-[#92400e]" : "bg-[#1e293b] text-muted-foreground border border-[#1e293b]"
                 }`}>{b}</div>
               ))}
             </div>
@@ -207,12 +207,12 @@ function PLayerPermCards({
       </span>
       <div className="flex flex-wrap gap-1.5">
         {nibbleCards.map(({ nib, bits, destNibs }) => (
-          <div key={nib} className="flex flex-col items-center gap-1 bg-secondary/20 border border-border/50 rounded p-1.5 min-w-[76px]">
+          <div key={nib} className="flex flex-col items-center gap-1 bg-[#0f172a] border border-[#334155] rounded p-1.5 min-w-[76px]">
             <span className="text-[8px] font-mono text-muted-foreground font-bold">Nib {nib}</span>
             {/* Source bit indices (hex) */}
             <div className="flex gap-px">
               {bits.map(b => (
-                <div key={b.idx} className="w-[17px] h-[15px] flex items-center justify-center rounded-sm text-[6px] font-mono font-bold bg-secondary border border-border/50 text-muted-foreground">
+                <div key={b.idx} className="w-[17px] h-[15px] flex items-center justify-center rounded-sm text-[6px] font-mono font-bold bg-secondary border border-[#334155] text-muted-foreground">
                   {toHex(b.idx)}
                 </div>
               ))}
@@ -221,14 +221,14 @@ function PLayerPermCards({
             <div className="flex gap-px">
               {bits.map(b => (
                 <div key={b.idx} className={`w-[17px] h-[17px] flex items-center justify-center rounded-sm text-[9px] font-mono font-bold ${
-                  b.inputVal === 1 ? "bg-[#f59e0b]/25 text-[#f59e0b] border border-[#f59e0b]/40" : "bg-muted/30 text-muted-foreground border border-border/30"
+                  b.inputVal === 1 ? "bg-[#78350f] text-[#f59e0b] border border-[#92400e]" : "bg-[#1e293b] text-muted-foreground border border-[#1e293b]"
                 }`}>{b.inputVal}</div>
               ))}
             </div>
             {/* P destinations (hex) */}
             <div className="flex gap-px">
               {bits.map(b => (
-                <div key={b.idx} className="w-[17px] h-[15px] flex items-center justify-center rounded-sm text-[6px] font-mono font-bold bg-[#34d399]/15 text-[#34d399] border border-[#34d399]/30">
+                <div key={b.idx} className="w-[17px] h-[15px] flex items-center justify-center rounded-sm text-[6px] font-mono font-bold bg-[#022c22] text-[#34d399] border border-[#064e3b]">
                   {toHex(b.dest)}
                 </div>
               ))}
@@ -238,7 +238,7 @@ function PLayerPermCards({
             <div className="flex gap-px">
               {bits.map(b => (
                 <div key={b.idx} className={`w-[17px] h-[17px] flex items-center justify-center rounded-sm text-[9px] font-mono font-bold ${
-                  b.outputVal === 1 ? "bg-[#34d399]/25 text-[#34d399] border border-[#34d399]/40" : "bg-muted/30 text-muted-foreground border border-border/30"
+                  b.outputVal === 1 ? "bg-[#064e3b] text-[#34d399] border border-[#065f46]" : "bg-[#1e293b] text-muted-foreground border border-[#1e293b]"
                 }`}>{b.outputVal}</div>
               ))}
             </div>
@@ -262,18 +262,18 @@ function PLayerOutputFormationCards({ outputBits }: { outputBits: (0|1)[] }) {
   });
 
   return (
-    <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-border/30">
+    <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-[#1e293b]">
       <span className="text-[9px] font-mono text-[#34d399] uppercase tracking-widest">
         Output Nibble Assembly (bits grouped back into hex nibbles)
       </span>
       <div className="flex flex-wrap gap-1.5">
         {nibbles.map(({ nib, start, bits, hexVal }) => (
-          <div key={nib} className="flex flex-col items-center gap-1 bg-secondary/10 border border-[#34d399]/20 rounded p-1.5 min-w-[50px]">
+          <div key={nib} className="flex flex-col items-center gap-1 bg-[#020617] border border-[#064e3b] rounded p-1.5 min-w-[50px]">
             <span className="text-[8px] font-mono text-muted-foreground font-bold">Out Nib {nib}</span>
             {/* Bit Indices */}
             <div className="flex gap-px">
               {[0, 1, 2, 3].map(i => (
-                <div key={i} className="w-[15px] h-[13px] flex items-center justify-center rounded-sm text-[6px] font-mono font-bold bg-[#34d399]/10 border border-[#34d399]/30 text-[#34d399]">
+                <div key={i} className="w-[15px] h-[13px] flex items-center justify-center rounded-sm text-[6px] font-mono font-bold bg-[#022c22] border border-[#064e3b] text-[#34d399]">
                   {toHex(start + i)}
                 </div>
               ))}
@@ -282,7 +282,7 @@ function PLayerOutputFormationCards({ outputBits }: { outputBits: (0|1)[] }) {
             <div className="flex gap-px">
               {bits.map((b, i) => (
                 <div key={i} className={`w-[15px] h-[15px] flex items-center justify-center rounded-sm text-[8px] font-mono font-bold ${
-                  b === 1 ? "bg-[#34d399]/25 text-[#34d399] border border-[#34d399]/40" : "bg-muted/30 text-muted-foreground border border-border/30"
+                  b === 1 ? "bg-[#064e3b] text-[#34d399] border border-[#065f46]" : "bg-[#1e293b] text-muted-foreground border border-[#1e293b]"
                 }`}>{b}</div>
               ))}
             </div>
@@ -322,12 +322,12 @@ function RoundCard({ r, mode }: { r: PRESENTRoundState; mode: "encryption" | "de
           Round {r.round}
         </h3>
         {r.isLastRound && mode === "encryption" && (
-          <span className="text-[9px] font-mono text-[#4ade80] border border-[#4ade80]/40 rounded px-1.5 py-0.5">
+          <span className="text-[9px] font-mono text-[#4ade80] border border-[#14532d] rounded px-1.5 py-0.5">
             Includes Final AddRoundKey
           </span>
         )}
         {r.round === 1 && mode === "decryption" && (
-          <span className="text-[9px] font-mono text-[#60a5fa] border border-[#60a5fa]/40 rounded px-1.5 py-0.5">
+          <span className="text-[9px] font-mono text-[#60a5fa] border border-[#1e3a8a] rounded px-1.5 py-0.5">
             Includes Initial AddRoundKey
           </span>
         )}
@@ -341,7 +341,7 @@ function RoundCard({ r, mode }: { r: PRESENTRoundState; mode: "encryption" | "de
           <>
             <NibbleRow bits={r.extraRoundKey} label="Initial Round Key (Kn+1)" variant="key" />
             <NibbleRow bits={r.extraAddKey!} label="After Initial addRoundKey (⊕)" variant="xor" />
-            <div className="border-t border-border/30 my-1" />
+            <div className="border-t border-[#1e293b] my-1" />
           </>
         )}
 
@@ -364,7 +364,7 @@ function RoundCard({ r, mode }: { r: PRESENTRoundState; mode: "encryption" | "de
             {/* Encryption Final Footer */}
             {r.isLastRound && r.extraRoundKey && (
               <>
-                <div className="border-t border-border/30 my-1" />
+                <div className="border-t border-[#1e293b] my-1" />
                 <NibbleRow bits={r.extraRoundKey} label="Final Round Key (Kn+1)" variant="key" />
                 <NibbleRow bits={r.extraAddKey!} label="Final addRoundKey (⊕ output)" variant="xor" />
               </>
@@ -419,7 +419,7 @@ export function PresentRoundDetailView({
               </span>
               <div className="flex flex-wrap gap-1.5 justify-center lg:justify-start">
                 {Array.from({ length: 20 }, (_, n) => (
-                  <div key={n} className="flex gap-0.5 border border-border/50 rounded px-1 py-1 bg-secondary/10">
+                  <div key={n} className="flex gap-0.5 border border-[#334155] rounded px-1 py-1 bg-[#020617]">
                     {state.key80.slice(n * 4, n * 4 + 4).map((bit, j) => {
                       const idx = n * 4 + j;
                       return (
@@ -427,7 +427,7 @@ export function PresentRoundDetailView({
                           key={j}
                           onClick={() => onKeyFlip?.(idx)}
                           className={`w-5 h-5 flex items-center justify-center rounded text-[10px] font-mono font-bold transition-all duration-200
-                            ${bit === 1 ? "bg-[var(--bit-key)] text-foreground" : "bg-[var(--bit-0)] text-muted-foreground hover:bg-muted/50"}
+                            ${bit === 1 ? "bg-[var(--bit-key)] text-foreground" : "bg-[var(--bit-0)] text-muted-foreground hover:bg-[#334155]"}
                             cursor-pointer hover:ring-1 hover:ring-ring hover:scale-110
                           `}
                         >
@@ -459,7 +459,7 @@ export function PresentRoundDetailView({
       ))}
 
       {state.completed && state.ciphertext.length > 0 && (
-        <div className="flex flex-col gap-2 p-3 rounded-lg bg-[#f59e0b]/10 border border-[#f59e0b]/30">
+        <div className="flex flex-col gap-2 p-3 rounded-lg bg-[#451a03] border border-[#78350f]">
           <span className="text-[10px] font-mono text-[#fbbf24] uppercase tracking-widest">
             {state.mode === "encryption" ? "Ciphertext" : "Recovered Plaintext"} (64-bit)
           </span>

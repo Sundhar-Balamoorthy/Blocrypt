@@ -46,7 +46,8 @@ import { PresentRoundDetailView } from "@/components/blocrypt/present-round-deta
 import { PresentSchematic } from "@/components/blocrypt/present-schematic";
 import { PresentSchematicAnim } from "@/components/blocrypt/present-schematic-anim";
 import { PresentFullCycle } from "@/components/blocrypt/present-full-cycle";
-import { Lock, Unlock, ShieldCheck, Cpu, Grid3X3 } from "lucide-react";
+import { Lock, Unlock, ShieldCheck, Cpu, Grid3X3, GraduationCap } from "lucide-react";
+import { WorksheetView } from "@/components/blocrypt/worksheet-view";
 
 // ─── Feistel Constants ────────────────────────────────────────
 const initialPlaintext = DEFAULT_PLAINTEXT as Bit[];
@@ -225,7 +226,7 @@ export default function HomePage() {
       {/* Header */}
       <header className="border-b border-border">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/15">
+          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#0c4a6e]">
             <Lock className="h-4.5 w-4.5 text-primary" />
           </div>
           <div>
@@ -301,6 +302,10 @@ export default function HomePage() {
               <TabsTrigger value="dataset" className="font-mono text-xs">
                 Dataset
               </TabsTrigger>
+              <TabsTrigger value="practice" className="font-mono text-xs flex items-center gap-1.5">
+                <GraduationCap className="h-3.5 w-3.5" />
+                Practice
+              </TabsTrigger>
             </TabsList>
 
             {/* SIMULATOR */}
@@ -316,18 +321,23 @@ export default function HomePage() {
                     onReset={handleReset}
                     onRunAll={handleRunAll}
                   />
-                  <button
-                    onClick={handleModeToggle}
-                    className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-xs font-mono text-secondary-foreground hover:bg-accent transition-colors"
-                  >
-                    {feistelState.mode === "encryption" ? (
-                      <Lock className="h-3.5 w-3.5" />
-                    ) : (
-                      <Unlock className="h-3.5 w-3.5" />
-                    )}
-                    Switch to{" "}
-                    {feistelState.mode === "encryption" ? "Decryption" : "Encryption"}
-                  </button>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-card border border-border w-full">
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+                      Operation Mode
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-mono font-bold transition-colors ${feistelState.mode === "encryption" ? "text-primary" : "text-muted-foreground"}`}>ENC</span>
+                      <button
+                        onClick={handleModeToggle}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${feistelState.mode === "encryption" ? "bg-primary" : "bg-[#22c55e]"}`}
+                        role="switch"
+                        aria-checked={feistelState.mode === "encryption"}
+                      >
+                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${feistelState.mode === "encryption" ? "translate-x-4" : "translate-x-1"}`} />
+                      </button>
+                      <span className={`text-[10px] font-mono font-bold transition-colors ${feistelState.mode === "decryption" ? "text-[#22c55e]" : "text-muted-foreground"}`}>DEC</span>
+                    </div>
+                  </div>
                   <div className="flex flex-col gap-1.5 p-3 rounded-lg bg-card border border-border w-fit">
                     <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest pl-1 mb-1 whitespace-nowrap">
                       Current State (click bits to flip)
@@ -360,12 +370,12 @@ export default function HomePage() {
                         </span>
                         <button 
                           onClick={handleRandomizeKeys}
-                          className="text-[9px] font-mono text-primary hover:text-primary/80 transition-colors uppercase font-bold"
+                          className="text-[9px] font-mono text-primary hover:text-[#bae6fd] transition-colors uppercase font-bold"
                         >
                           Randomize All
                         </button>
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 max-h-[160px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-border scrollbar-track-secondary/20">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-2 max-h-[160px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-border scrollbar-track-[#0f172a]">
                         {feistelKeys.map((key, i) => (
                           <div key={i} className="flex flex-col gap-1">
                             <label className="text-[9px] font-mono text-muted-foreground">K{i+1}</label>
@@ -424,7 +434,7 @@ export default function HomePage() {
                   />
                   <div className="p-3 rounded-lg bg-card border border-border text-[10px] font-mono text-muted-foreground">
                     <div className="uppercase tracking-widest mb-2">Tip</div>
-                    Use <span className="text-foreground font-bold">Next Round</span> or <span className="text-foreground font-bold">Run All</span> to compute rounds, then navigate the animation sub-steps using the schematic&apos;s own controls below.
+                    Use <span className="text-foreground font-bold">Next Round</span> or <span className="text-foreground font-bold">Run All</span> to compute rounds, then navigate sub-steps with ← → arrow keys.
                   </div>
                 </aside>
                 <div className="flex-1 min-w-0">
@@ -466,6 +476,22 @@ export default function HomePage() {
                 <DatasetGenerator keys={feistelKeys} />
               </div>
             </TabsContent>
+
+            {/* PRACTICE */}
+            <TabsContent value="practice">
+              <div className="max-w-4xl">
+                <div className="mb-4">
+                  <h2 className="text-sm font-mono font-bold text-foreground flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4 text-primary" />
+                    Interactive Cryptography Worksheet
+                  </h2>
+                  <p className="text-xs text-muted-foreground font-mono mt-1">
+                    Practice your cryptanalysis skills. Solve the puzzles by calculating missing bits in the encryption process.
+                  </p>
+                </div>
+                <WorksheetView cipher="feistel" />
+              </div>
+            </TabsContent>
           </Tabs>
         )}
 
@@ -485,6 +511,10 @@ export default function HomePage() {
               <TabsTrigger value="dataset" className="font-mono text-xs">
                 Dataset
               </TabsTrigger>
+              <TabsTrigger value="practice" className="font-mono text-xs flex items-center gap-1.5">
+                <GraduationCap className="h-3.5 w-3.5" />
+                Practice
+              </TabsTrigger>
             </TabsList>
 
             {/* S-DES SIMULATOR */}
@@ -499,17 +529,23 @@ export default function HomePage() {
                     onReset={handleSDESReset}
                     onRunAll={handleSDESRunAll}
                   />
-                  <button
-                    onClick={handleSDESModeToggle}
-                    className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-xs font-mono text-secondary-foreground hover:bg-accent transition-colors"
-                  >
-                    {sdesMode === "encryption" ? (
-                      <Lock className="h-3.5 w-3.5" />
-                    ) : (
-                      <Unlock className="h-3.5 w-3.5" />
-                    )}
-                    Switch to {sdesMode === "encryption" ? "Decryption" : "Encryption"}
-                  </button>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-card border border-border w-full">
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+                      Operation Mode
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-mono font-bold transition-colors ${sdesMode === "encryption" ? "text-primary" : "text-muted-foreground"}`}>ENC</span>
+                      <button
+                        onClick={handleSDESModeToggle}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${sdesMode === "encryption" ? "bg-primary" : "bg-[#22c55e]"}`}
+                        role="switch"
+                        aria-checked={sdesMode === "encryption"}
+                      >
+                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${sdesMode === "encryption" ? "translate-x-4" : "translate-x-1"}`} />
+                      </button>
+                      <span className={`text-[10px] font-mono font-bold transition-colors ${sdesMode === "decryption" ? "text-[#22c55e]" : "text-muted-foreground"}`}>DEC</span>
+                    </div>
+                  </div>
 
                   <div className="flex flex-col gap-2 p-3 rounded-lg bg-card border border-border w-fit">
                     <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest whitespace-nowrap">
@@ -564,7 +600,7 @@ export default function HomePage() {
                   />
                   <div className="p-3 rounded-lg bg-card border border-border text-[10px] font-mono text-muted-foreground">
                     <div className="uppercase tracking-widest mb-2">Tip</div>
-                    Use <span className="text-foreground font-bold">Next Step</span> to compute each cipher step, then navigate the 21 animation sub-steps using the schematic&apos;s own controls below.
+                    Use <span className="text-foreground font-bold">Next Step</span> to compute each cipher step, then navigate sub-steps with ← → arrow keys.
                   </div>
                 </aside>
                 <div className="flex-1 min-w-0">
@@ -602,6 +638,22 @@ export default function HomePage() {
                 <DatasetGenerator cipher="sdes" />
               </div>
             </TabsContent>
+
+            {/* S-DES PRACTICE */}
+            <TabsContent value="practice">
+              <div className="max-w-4xl">
+                <div className="mb-4">
+                  <h2 className="text-sm font-mono font-bold text-foreground flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4 text-primary" />
+                    S-DES Interactive Worksheet
+                  </h2>
+                  <p className="text-xs text-muted-foreground font-mono mt-1">
+                    Practice S-DES bit manipulation, IP permutations, and round calculations.
+                  </p>
+                </div>
+                <WorksheetView cipher="sdes" />
+              </div>
+            </TabsContent>
           </Tabs>
         )}
 
@@ -613,6 +665,10 @@ export default function HomePage() {
               <TabsTrigger value="schematic" className="font-mono text-xs">Schematic</TabsTrigger>
               <TabsTrigger value="fullcycle" className="font-mono text-xs">Full Cycle</TabsTrigger>
               <TabsTrigger value="dataset" className="font-mono text-xs">Dataset</TabsTrigger>
+              <TabsTrigger value="practice" className="font-mono text-xs flex items-center gap-1.5">
+                <GraduationCap className="h-3.5 w-3.5" />
+                Practice
+              </TabsTrigger>
             </TabsList>
 
             {/* PRESENT SIMULATOR */}
@@ -629,13 +685,23 @@ export default function HomePage() {
                     onRunAll={handlePresentRunAll}
                     onRoundsChange={handlePresentRoundsChange}
                   />
-                  <button
-                    onClick={handlePresentModeToggle}
-                    className="flex items-center gap-2 rounded-md bg-secondary px-3 py-2 text-xs font-mono text-secondary-foreground hover:bg-accent transition-colors"
-                  >
-                    {presentMode === "encryption" ? <Lock className="h-3.5 w-3.5" /> : <Unlock className="h-3.5 w-3.5" />}
-                    Switch to {presentMode === "encryption" ? "Decryption" : "Encryption"}
-                  </button>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-card border border-border w-full">
+                    <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+                      Operation Mode
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-mono font-bold transition-colors ${presentMode === "encryption" ? "text-primary" : "text-muted-foreground"}`}>ENC</span>
+                      <button
+                        onClick={handlePresentModeToggle}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${presentMode === "encryption" ? "bg-primary" : "bg-[#22c55e]"}`}
+                        role="switch"
+                        aria-checked={presentMode === "encryption"}
+                      >
+                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${presentMode === "encryption" ? "translate-x-4" : "translate-x-1"}`} />
+                      </button>
+                      <span className={`text-[10px] font-mono font-bold transition-colors ${presentMode === "decryption" ? "text-[#22c55e]" : "text-muted-foreground"}`}>DEC</span>
+                    </div>
+                  </div>
 
                   <div className="flex flex-col gap-2 p-3 rounded-lg bg-card border border-border w-fit">
                     <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest whitespace-nowrap">
@@ -681,7 +747,7 @@ export default function HomePage() {
                   />
                   <div className="p-3 rounded-lg bg-card border border-border text-[10px] font-mono text-muted-foreground">
                     <div className="uppercase tracking-widest mb-2">Tip</div>
-                    Use <span className="text-foreground font-bold">Next Round</span> or <span className="text-foreground font-bold">Run All</span> to compute rounds, then navigate the animation sub-steps using the schematic&apos;s own controls below.
+                    Use <span className="text-foreground font-bold">Next Round</span> or <span className="text-foreground font-bold">Run All</span> to compute rounds, then navigate sub-steps with ← → arrow keys.
                   </div>
                 </aside>
                 <div className="flex-1 min-w-0">
@@ -717,6 +783,22 @@ export default function HomePage() {
                   </p>
                 </div>
                 <DatasetGenerator cipher="present" />
+              </div>
+            </TabsContent>
+
+            {/* PRESENT PRACTICE */}
+            <TabsContent value="practice">
+              <div className="max-w-4xl">
+                <div className="mb-4">
+                  <h2 className="text-sm font-mono font-bold text-foreground flex items-center gap-2">
+                    <GraduationCap className="h-4 w-4 text-primary" />
+                    PRESENT Interactive Worksheet
+                  </h2>
+                  <p className="text-xs text-muted-foreground font-mono mt-1">
+                    Practice PRESENT Substitution and Permutation rounds on a 16-bit state subset.
+                  </p>
+                </div>
+                <WorksheetView cipher="present" />
               </div>
             </TabsContent>
           </Tabs>

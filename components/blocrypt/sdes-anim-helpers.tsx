@@ -33,13 +33,13 @@ export function BitSquare({
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
       {showIndex && index !== undefined && (
-        <div style={{ fontSize: 14, color: "#ffffff", fontFamily: "monospace" }}>{index}</div>
+        <div style={{ fontSize: 20, color: "#ffffff", fontFamily: "monospace", fontWeight: "bold", opacity: 0.9 }}>{index}</div>
       )}
       <div style={{
-        width: size, height: size, background: dim ? "#0f1a2a" : bg,
-        border: `2px solid ${dim ? "#1e293b" : border}`, borderRadius: 8,
+        width: size === 42 ? 48 : size, height: size === 42 ? 48 : size, background: dim ? "#0f1a2a" : bg,
+        border: `2px solid ${dim ? "#1e293b" : border}`, borderRadius: size > 30 ? 8 : 4,
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: size > 40 ? 20 : 16, fontWeight: "bold", fontFamily: "monospace",
+        fontSize: size === 42 ? 26 : 20, fontWeight: "bold", fontFamily: "monospace",
         color: dim ? "#1e293b" : (highlight ? "#0f172a" : (val === 1 ? "#fff" : "#cbd5e1")),
         opacity: dim ? 0.35 : 1, transition: "all 0.3s ease",
         boxShadow: highlight ? "0 0 16px #f59e0b88" : (val === 1 && !dim ? `0 0 8px ${border}66` : "none"),
@@ -114,33 +114,44 @@ export function PermTable({
   const clr = color ?? C.plain;
   return (
     <div style={{
-      display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+      display: "flex", flexDirection: "column", alignItems: "center", gap: 10,
       opacity: 0, animation: "stagger-fade 0.5s ease forwards", animationDelay: `${delay}ms`
     }}>
       {label && (
-        <div style={{ fontSize: 14, fontFamily: "monospace", color: "#ffffff", textTransform: "uppercase", letterSpacing: 1 }}>
+        <div style={{ fontSize: 13, fontFamily: "monospace", color: "#ffffff", textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>
           {label}
         </div>
       )}
-      <div style={{ display: "flex", gap: 6 }}>
+      <div style={{ display: "flex", gap: 8 }}>
         {table.map((src, dst) => (
-          <div key={dst} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-            {inputBits && (
-              <BitSquare val={inputBits[src] ?? null} color={inputBits[src] === 1 ? clr : undefined} size={42} showIndex={false} />
-            )}
-            <div style={{
-              width: 42, height: 26, background: `${clr}18`,
-              border: `1px solid ${clr}55`, borderRadius: 4,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 12, fontFamily: "monospace", color: clr, fontWeight: "bold",
-            }}>
-              {src}
+          <div key={dst} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+            {/* Source Index Reference */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <div style={{ fontSize: 14, color: clr, opacity: 0.8, fontFamily: "monospace", textTransform: "uppercase", fontWeight: "bold" }}>Source</div>
+              <div style={{
+                width: 52, height: 42, background: `${clr}08`,
+                border: `2px solid ${clr}44`, borderRadius: 8,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 20, fontFamily: "monospace", color: clr, fontWeight: "bold",
+              }}>
+                {src}
+              </div>
             </div>
-            {outputBits && (
-              <BitSquare val={outputBits[dst] ?? null} color={outputBits[dst] === 1 ? clr : undefined} size={42} showIndex={false} />
-            )}
+            
+            <div style={{ color: `${clr}88`, fontSize: 24, fontWeight: "bold" }}>↓</div>
+
+            {/* Destination / Output Bit */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+              {outputBits && (
+                <BitSquare val={outputBits[dst] ?? null} color={outputBits[dst] === 1 ? clr : undefined} size={42} showIndex={false} />
+              )}
+              <div style={{ fontSize: 14, color: "#ffffff", opacity: 1, fontFamily: "monospace", fontWeight: "bold" }}>Pos {dst}</div>
+            </div>
           </div>
         ))}
+      </div>
+      <div style={{ fontSize: 16, color: "#ffffff", fontFamily: "monospace", padding: "8px 24px", background: "#ffffff08", borderRadius: 8, fontStyle: "italic", marginTop: 12, fontWeight: "bold" }}>
+        Mapping: The bit at input index <span style={{ color: clr, fontWeight: "bold" }}>[X]</span> moves to output position <span style={{ color: clr, fontWeight: "bold" }}>[Y]</span>
       </div>
     </div>
   );

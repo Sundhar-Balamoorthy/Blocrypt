@@ -18,7 +18,7 @@ function TableGrid({ title, table, cols }: { title: string; table: number[]; col
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
       >
         {table.map((val, i) => (
-          <div key={i} className="bg-secondary/50 border border-border rounded py-1 px-1.5 text-center font-mono text-[10px]">
+          <div key={i} className="bg-[#334155] border border-border rounded py-1 px-1.5 text-center font-mono text-[10px]">
             {val}
           </div>
         ))}
@@ -34,7 +34,7 @@ function SBoxGrid({ title, sbox }: { title: string; sbox: number[][] }) {
       <div className="grid grid-cols-4 gap-1">
         {sbox.map((row, r) => 
           row.map((val, c) => (
-            <div key={`${r}-${c}`} className="bg-secondary/50 border border-border rounded py-1 px-1.5 text-center font-mono text-[10px]">
+            <div key={`${r}-${c}`} className="bg-[#334155] border border-border rounded py-1 px-1.5 text-center font-mono text-[10px]">
               {val}
             </div>
           ))
@@ -184,7 +184,7 @@ export function SDESRoundDetailView({ state }: SDESRoundDetailViewProps) {
             detail={state.round2Detail}
             label={`f_K Round 2 — using ${state.mode === "encryption" ? "K2" : "K1"}`}
           />
-          <div className="flex flex-col gap-2 p-3 rounded-lg bg-[#f59e0b]/10 border border-[#f59e0b]/30">
+          <div className="flex flex-col gap-2 p-3 rounded-lg bg-[#451a03] border border-[#78350f]">
             <span className="text-[10px] font-mono text-[#fbbf24] uppercase tracking-widest">
               {state.mode === "encryption" ? "Ciphertext" : "Recovered Plaintext"} (after IP⁻¹)
             </span>

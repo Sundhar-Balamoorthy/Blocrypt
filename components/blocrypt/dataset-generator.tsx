@@ -130,8 +130,8 @@ export function DatasetGenerator({ cipher = "feistel", keys }: DatasetGeneratorP
             <div className={showScroll ? "overflow-x-auto max-w-full" : ""}>
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-secondary/50">
-                    <TableHead className="font-mono text-[10px] py-2 px-2 sticky left-0 bg-secondary/50">
+                  <TableRow className="bg-[#334155]">
+                    <TableHead className="font-mono text-[10px] py-2 px-2 sticky left-0 bg-[#334155]">
                       #
                     </TableHead>
                     {Array.from({ length: pLen }, (_, i) => (
@@ -150,7 +150,7 @@ export function DatasetGenerator({ cipher = "feistel", keys }: DatasetGeneratorP
                         C{i}
                       </TableHead>
                     ))}
-                    <TableHead className="font-mono text-[10px] py-2 px-2 text-center sticky right-0 bg-secondary/50">
+                    <TableHead className="font-mono text-[10px] py-2 px-2 text-center sticky right-0 bg-[#334155]">
                       Label
                     </TableHead>
                   </TableRow>
@@ -191,7 +191,7 @@ export function DatasetGenerator({ cipher = "feistel", keys }: DatasetGeneratorP
                 </TableBody>
               </Table>
             </div>
-            <div className="px-3 py-2 text-[10px] font-mono text-muted-foreground bg-secondary/30 border-t border-border">
+            <div className="px-3 py-2 text-[10px] font-mono text-muted-foreground bg-[#1e293b] border-t border-border">
               Showing first {preview?.length} of {dataset.length} rows (Block: {pLen} bits)
             </div>
           </div>

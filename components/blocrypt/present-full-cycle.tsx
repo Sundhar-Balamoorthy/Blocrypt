@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, CheckCircle2, XCircle } from "lucide-react";
+import { Play, CheckCircle2, XCircle, Download } from "lucide-react";
 import {
   type Bit,
   type PRESENTFullCycleResult,
@@ -80,6 +80,32 @@ export function PresentFullCycle() {
     if (result) setResult(presentFullCycle(plaintext, newK as Bit[], rounds));
   }, [plaintext, key80, rounds, result]);
 
+  const handleExportPDF = async () => {
+    const element = document.getElementById("present-full-cycle-content");
+    if (!element) return;
+    try {
+      const { toPng } = await import("html-to-image");
+      const jsPDFModule = await import("jspdf/dist/jspdf.umd.min.js");
+      const jsPDF = jsPDFModule.jsPDF;
+      
+      const imgData = await toPng(element, { quality: 0.95, backgroundColor: 'hsl(215, 25%, 10%)' });
+      
+      const pdfWidth = 210;
+      const canvas = await new Promise<{width: number, height: number}>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.width, height: img.height });
+        img.src = imgData;
+      });
+      
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: [pdfWidth, pdfHeight] });
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("present-full-cycle.pdf");
+    } catch (err) {
+      console.error("Failed to export PDF", err);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       {/* Controls */}
@@ -126,6 +152,10 @@ export function PresentFullCycle() {
             Run Full Cycle
           </Button>
           <Button variant="secondary" onClick={handleReset} className="gap-1.5">Reset</Button>
+          <Button variant="outline" onClick={handleExportPDF} className="gap-1.5">
+            <Download className="h-4 w-4" />
+            Export as PDF
+          </Button>
           <div className="flex items-center gap-2 ml-auto">
             <span className="text-xs font-mono text-muted-foreground">Rounds:</span>
             <input
@@ -142,7 +172,7 @@ export function PresentFullCycle() {
       </p>
 
       {result && (
-        <div className="flex flex-col gap-6 p-6 rounded-lg border border-border bg-card">
+        <div id="present-full-cycle-content" className="flex flex-col gap-6 p-6 rounded-lg border border-border bg-card">
           {/* Plaintext */}
           <div className="flex flex-col gap-2 p-3 rounded-lg bg-secondary/40 border border-border">
             <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">Original Plaintext (64-bit)</span>

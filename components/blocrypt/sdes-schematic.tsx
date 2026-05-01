@@ -87,6 +87,18 @@ export function SDESSchematic({ state }: SDESSchematicProps) {
   const prev = useCallback(() => setSub(p => Math.max(p - 1, 0)), []);
   const reset = useCallback(() => { setSub(0); setPlaying(false); }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") {
+        next();
+      } else if (e.key === "ArrowLeft") {
+        prev();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [next, prev]);
+
   // ── Step panels ─────────────────────────────────────────────────────────────
 
   function noData() {
@@ -506,12 +518,25 @@ export function SDESSchematic({ state }: SDESSchematicProps) {
   }
 
   // ── Layout styles ──────────────────────────────────────────────────────────
-  const col: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: 14 };
-  const row: React.CSSProperties = { display: "flex", flexDirection: "row", alignItems: "center", gap: 20, flexWrap: "wrap", justifyContent: "center" };
-  const note: React.CSSProperties = { fontSize: 15, color: "#ffffff", fontFamily: "monospace", textAlign: "center", maxWidth: 520, lineHeight: 1.6 };
+  function SectionLabel({ text, color, sub }: { text: string; color?: string; sub?: string }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, marginBottom: 8 }}>
+      <div style={{
+        fontSize: 28, fontWeight: "bold", fontFamily: "monospace",
+        color: color ?? "#f1f5f9",
+        textShadow: color ? `0 0 32px ${color}88` : "none",
+        letterSpacing: 2,
+      }}>{text}</div>
+      {sub && <div style={{ fontSize: 18, color: "#cbd5e1", fontFamily: "monospace", textAlign: "center", maxWidth: 640, fontWeight: "bold" }}>{sub}</div>}
+    </div>
+  );
+}
+  const col: React.CSSProperties = { display: "flex", flexDirection: "column", alignItems: "center", gap: 18 };
+  const row: React.CSSProperties = { display: "flex", flexDirection: "row", alignItems: "center", gap: 24, flexWrap: "wrap", justifyContent: "center" };
+  const note: React.CSSProperties = { fontSize: 18, color: "#cbd5e1", fontFamily: "monospace", textAlign: "center", maxWidth: 640, lineHeight: 1.6, fontWeight: "bold" };
   const tag = (c: string): React.CSSProperties => ({
-    fontSize: 11, fontFamily: "monospace", color: c, fontWeight: "bold",
-    background: `${c}18`, border: `1px solid ${c}55`, borderRadius: 4, padding: "2px 8px",
+    fontSize: 14, fontFamily: "monospace", color: "#ffffff", fontWeight: "bold",
+    background: `${c}33`, border: `1.5px solid ${c}88`, borderRadius: 6, padding: "4px 12px",
   });
 
   // Step progress %
@@ -527,8 +552,8 @@ export function SDESSchematic({ state }: SDESSchematicProps) {
             key={i}
             onClick={() => setSub(i)}
             style={{
-              display: "inline-block", padding: "3px 10px", margin: "0 2px",
-              borderRadius: 4, border: "none", cursor: "pointer", fontSize: 10,
+              display: "inline-block", padding: "5px 12px", margin: "0 3px",
+              borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12,
               background: i === sub ? "#1d4ed8" : (i < sub ? "#1e3a5f" : "transparent"),
               color: i === sub ? "#fff" : (i < sub ? "#93c5fd" : C.dim),
               fontFamily: "monospace", fontWeight: i === sub ? "bold" : "normal",
@@ -557,14 +582,9 @@ export function SDESSchematic({ state }: SDESSchematicProps) {
         <div style={{ height: "100%", borderRadius: 2, width: `${pct}%`, background: "linear-gradient(90deg,#818cf8,#60a5fa,#34d399,#f59e0b,#fbbf24)", transition: "width 0.3s ease" }} />
       </div>
 
-      {/* ── Main visualization area ───────────────────────────────────────── */}
-      <div style={{
-        padding: "28px 32px 32px",
-        minHeight: 420,
-        display: "flex", alignItems: "flex-start", justifyContent: "center",
-        overflowY: "auto",
-      }}>
-        <div style={{ animation: "fadeSlide 0.3s ease", maxWidth: 760, width: "100%" }}>
+      {/* ── Main visualization area ─────────────────────────────────────── */}
+      <div style={{ padding: "16px 32px 32px", display: "flex", alignItems: "flex-start", justifyContent: "center", overflow: "hidden" }}>
+        <div style={{ animation: "fadeSlide 0.3s ease", maxWidth: 760, width: "100%", zoom: 0.75 }}>
           {panel()}
         </div>
       </div>

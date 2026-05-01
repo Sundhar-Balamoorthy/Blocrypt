@@ -13,7 +13,7 @@ import {
 } from "@/lib/feistel";
 import { BitDisplay } from "./bit-display";
 import { RoundSchematic } from "./round-schematic";
-import { Play, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
+import { Play, CheckCircle2, XCircle, ChevronDown, Download } from "lucide-react";
 
 interface FullCycleViewProps {
   totalRounds?: number;
@@ -21,8 +21,8 @@ interface FullCycleViewProps {
   keys?: number[];
 }
 
-export function FullCycleView({ 
-  totalRounds = DEFAULT_ROUNDS, 
+export function FullCycleView({
+  totalRounds = DEFAULT_ROUNDS,
   initialPlaintext,
   keys = DEFAULT_KEYS
 }: FullCycleViewProps) {
@@ -66,6 +66,32 @@ export function FullCycleView({
     }
   }, [plaintext, baseline, totalRounds, keys]);
 
+  const handleExportPDF = async () => {
+    const element = document.getElementById("feistel-full-cycle-content");
+    if (!element) return;
+    try {
+      const { toPng } = await import("html-to-image");
+      const jsPDFModule = await import("jspdf/dist/jspdf.umd.min.js");
+      const jsPDF = jsPDFModule.jsPDF;
+      
+      const imgData = await toPng(element, { quality: 0.95, backgroundColor: 'hsl(215, 25%, 10%)' });
+      
+      const pdfWidth = 210;
+      const canvas = await new Promise<{width: number, height: number}>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve({ width: img.width, height: img.height });
+        img.src = imgData;
+      });
+      
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: [pdfWidth, pdfHeight] });
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("feistel-full-cycle.pdf");
+    } catch (err) {
+      console.error("Failed to export PDF", err);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
@@ -80,14 +106,15 @@ export function FullCycleView({
         >
           Reset Plaintext
         </Button>
-        <span className="text-xs text-muted-foreground font-mono">
-          Encrypt {totalRounds} rounds, then Decrypt {totalRounds} rounds
-        </span>
+        <Button variant="outline" onClick={handleExportPDF} className="gap-1.5 ml-auto">
+          <Download className="h-4 w-4" />
+          Export as PDF
+        </Button>
       </div>
 
       {result && (
         <ScrollArea className="h-[680px] w-full rounded-lg border border-border bg-card">
-          <div className="p-6 flex flex-col gap-6">
+          <div id="feistel-full-cycle-content" className="p-6 flex flex-col gap-6 bg-card">
             {/* Editable plaintext */}
             <div className="flex flex-col gap-1.5 p-3 rounded-lg bg-secondary/40 border border-border">
               <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
@@ -157,11 +184,10 @@ export function FullCycleView({
 
             {/* Verification */}
             <div
-              className={`flex items-center gap-2 rounded-md px-4 py-3 font-mono text-sm font-bold ${
-                result.success
+              className={`flex items-center gap-2 rounded-md px-4 py-3 font-mono text-sm font-bold ${result.success
                   ? "bg-[#22c55e]/15 text-[#4ade80]"
                   : "bg-destructive/15 text-destructive"
-              }`}
+                }`}
             >
               {result.success ? (
                 <CheckCircle2 className="h-5 w-5" />

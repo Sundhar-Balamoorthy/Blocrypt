@@ -161,7 +161,7 @@ export function MLEvaluator({ dataset, cipher = "feistel" }: MLEvaluatorProps) {
       </div>
 
       {error && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/15 border border-destructive/30">
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-[#450a0a] border border-[#7f1d1d]">
           <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
           <div className="text-xs text-destructive font-mono">{error}</div>
         </div>
@@ -194,7 +194,7 @@ export function MLEvaluator({ dataset, cipher = "feistel" }: MLEvaluatorProps) {
           </div>
 
           {/* Confusion Matrix */}
-          <div className="flex flex-col gap-2 p-3 rounded-lg bg-secondary/30 border border-border">
+          <div className="flex flex-col gap-2 p-3 rounded-lg bg-[#1e293b] border border-border">
             <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
               Confusion Matrix
             </span>
@@ -205,13 +205,13 @@ export function MLEvaluator({ dataset, cipher = "feistel" }: MLEvaluatorProps) {
                   {metrics.confusion_matrix.tp}
                 </div>
               </div>
-              <div className="text-center p-2 rounded bg-destructive/10 border border-destructive/30">
+              <div className="text-center p-2 rounded bg-[#450a0a] border border-[#7f1d1d]">
                 <div className="text-[10px] text-muted-foreground">FP</div>
                 <div className="text-sm font-bold text-destructive">
                   {metrics.confusion_matrix.fp}
                 </div>
               </div>
-              <div className="text-center p-2 rounded bg-destructive/10 border border-destructive/30">
+              <div className="text-center p-2 rounded bg-[#450a0a] border border-[#7f1d1d]">
                 <div className="text-[10px] text-muted-foreground">FN</div>
                 <div className="text-sm font-bold text-destructive">
                   {metrics.confusion_matrix.fn}
@@ -227,7 +227,7 @@ export function MLEvaluator({ dataset, cipher = "feistel" }: MLEvaluatorProps) {
           </div>
 
           {/* Interpretation */}
-          <div className="flex items-start gap-2 p-3 rounded-lg bg-secondary/30 border border-border">
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-[#1e293b] border border-border">
             <AlertCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
             <div className="text-xs text-muted-foreground font-mono">
               <p>
@@ -256,7 +256,7 @@ interface MetricCardProps {
 
 function MetricCard({ label, value, icon }: MetricCardProps) {
   return (
-    <div className="flex flex-col gap-1 p-2 rounded-lg bg-secondary/40 border border-border">
+    <div className="flex flex-col gap-1 p-2 rounded-lg bg-[#1e293b] border border-border">
       <div className="flex items-center gap-1.5">
         <div className="text-muted-foreground">{icon}</div>
         <span className="text-[10px] font-mono text-muted-foreground uppercase">

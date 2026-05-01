@@ -11,22 +11,22 @@ interface PresentSchematicAnimProps {
 
 // ── Colour palette ────────────────────────────────────────────────────────────
 const C = {
-  plain:  "#818cf8",
-  key:    "#4ade80",
-  sbox:   "#f59e0b",
+  plain: "#818cf8",
+  key: "#4ade80",
+  sbox: "#f59e0b",
   player: "#34d399",
-  xor:    "#a78bfa",
-  out:    "#fbbf24",
-  dim:    "#475569",
-  bg:     "#0a0f1c",
+  xor: "#a78bfa",
+  out: "#fbbf24",
+  dim: "#475569",
+  bg: "#0a0f1c",
 };
 
 // Speed presets
 const SPEEDS = [
   { label: "0.5×", ms: 9000 },
-  { label: "1×",   ms: 4500 },
-  { label: "2×",   ms: 2250 },
-  { label: "3×",   ms: 1125 },
+  { label: "1×", ms: 4500 },
+  { label: "2×", ms: 2250 },
+  { label: "3×", ms: 1125 },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -69,17 +69,17 @@ function NibbleRow({
     const val = hasNull ? "?" : hexNibble(nibble as Bit[]);
     const isNonZero = !hasNull && val !== "0";
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
-        <div style={{ fontSize: 11, color: "#ffffff", fontFamily: "monospace" }}>{idx}</div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+        <div style={{ fontSize: 18, color: "#ffffff", fontFamily: "monospace", fontWeight: "bold", opacity: 0.9 }}>{idx}</div>
         <div style={{
-          width: 36, height: 36,
+          width: 48, height: 48,
           background: isNonZero ? `${clr}22` : "#1e293b",
           border: `2px solid ${isNonZero ? clr : "#334155"}`,
-          borderRadius: 6,
+          borderRadius: 8,
           display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 15, fontWeight: "bold", fontFamily: "monospace",
+          fontSize: 26, fontWeight: "bold", fontFamily: "monospace",
           color: isNonZero ? clr : "#cbd5e1",
-          boxShadow: isNonZero ? `0 0 6px ${clr}44` : "none",
+          boxShadow: isNonZero ? `0 0 10px ${clr}55` : "none",
           transition: "all 0.3s ease",
         }}>
           {val}
@@ -99,19 +99,20 @@ function NibbleRow({
     }}>
       {label && (
         <div style={{
-          fontSize: 13, fontFamily: "monospace", color: labelColor ?? "#ffffff",
-          textTransform: "uppercase", letterSpacing: 1, fontWeight: "bold",
+          fontSize: 20, fontFamily: "monospace", color: labelColor ?? "#ffffff",
+          textTransform: "uppercase", letterSpacing: 2, fontWeight: "bold",
+          marginBottom: 4,
         }}>{label}</div>
       )}
-      <div style={{ display: "flex", gap: 4 }}>
+      <div style={{ display: "flex", gap: 8 }}>
         {row1.map((ch, i) => <NibbleBox key={i} nibble={ch} idx={i} />)}
       </div>
       {row2.length > 0 && (
-        <div style={{ display: "flex", gap: 4 }}>
+        <div style={{ display: "flex", gap: 8 }}>
           {row2.map((ch, i) => <NibbleBox key={i + 8} nibble={ch} idx={i + 8} />)}
         </div>
       )}
-      <div style={{ fontSize: 11, color: "#94a3b8", fontFamily: "monospace" }}>
+      <div style={{ fontSize: 16, color: "#cbd5e1", fontFamily: "monospace", fontWeight: "bold", marginTop: 6 }}>
         Hex: {bits.some(b => b === null) ? "?" : bitsToHexShort(bits as Bit[], 16)}
       </div>
     </div>
@@ -126,9 +127,9 @@ function SBoxLookupView({
 }) {
   // Parse all 16 nibble lookups
   const nibbles = Array.from({ length: 16 }, (_, n) => {
-    const inNib  = inputBits.slice(n * 4, n * 4 + 4) as Bit[];
+    const inNib = inputBits.slice(n * 4, n * 4 + 4) as Bit[];
     const outNib = outputBits.slice(n * 4, n * 4 + 4) as Bit[];
-    const inVal  = parseInt(inNib.join(""), 2);
+    const inVal = parseInt(inNib.join(""), 2);
     const outVal = SBOX[inVal];
     const row = inVal >> 2;   // upper 2 bits = bits[0,1]
     const col = inVal & 3;    // lower 2 bits = bits[2,3]
@@ -136,11 +137,11 @@ function SBoxLookupView({
   });
 
   // Track which rows / cols / cells are active in this round
-  const activeRows  = new Set(nibbles.map(n => n.row));
-  const activeCols  = new Set(nibbles.map(n => n.col));
+  const activeRows = new Set(nibbles.map(n => n.row));
+  const activeCols = new Set(nibbles.map(n => n.col));
   const activeCells = new Set(nibbles.map(n => `${n.row},${n.col}`));
 
-  const sz  = 48;   // cell size
+  const sz = 48;   // cell size
   const hdr = 40;   // row-header width
   const mono: React.CSSProperties = { fontFamily: "monospace" };
 
@@ -148,11 +149,11 @@ function SBoxLookupView({
   function MiniBit({ b }: { b: Bit }) {
     return (
       <div style={{
-        width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 11, fontWeight: "bold", ...mono,
+        width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 16, fontWeight: "bold", ...mono,
         background: b === 1 ? `${C.sbox}33` : "#1e293b",
         color: b === 1 ? C.sbox : "#cbd5e1",
-        borderRadius: 3, border: `1px solid ${b === 1 ? `${C.sbox}66` : "#334155"}`,
+        borderRadius: 4, border: `1px solid ${b === 1 ? `${C.sbox}66` : "#334155"}`,
       }}>{b}</div>
     );
   }
@@ -200,14 +201,14 @@ function SBoxLookupView({
               const isActive = activeCells.has(`${r},${c}`);
               return (
                 <div key={c} style={{
-                  width: sz, height: sz,
+                  width: sz + 12, height: sz + 12,
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 20, fontWeight: "bold", ...mono,
+                  fontSize: 32, fontWeight: "bold", ...mono,
                   background: isActive ? C.sbox : "#1e293b",
                   color: isActive ? "#0a0f1c" : "#94a3b8",
                   border: `2px solid ${isActive ? C.sbox : "#334155"}`,
-                  borderRadius: 6,
-                  boxShadow: isActive ? `0 0 12px ${C.sbox}66` : "none",
+                  borderRadius: 8,
+                  boxShadow: isActive ? `0 0 16px ${C.sbox}88` : "none",
                   transition: "all 0.3s ease",
                 }}>
                   {val.toString(16).toUpperCase()}
@@ -222,33 +223,34 @@ function SBoxLookupView({
       <div style={{ fontSize: 12, color: "#ffffff", ...mono, fontWeight: "bold", marginTop: 4 }}>
         16 Parallel Nibble Lookups
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 700 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, width: "100%", maxWidth: 840 }}>
         {nibbles.map(n => (
           <div key={n.idx} style={{
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 5,
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
             background: "#0f172a", border: `1px solid ${C.sbox}44`,
-            borderRadius: 8, padding: "8px 10px", minWidth: 78,
+            borderRadius: 10, padding: "10px 14px",
           }}>
             {/* Nibble label */}
-            <div style={{ fontSize: 10, color: C.dim, ...mono, fontWeight: "bold" }}>S{n.idx}</div>
+            <div style={{ fontSize: 14, color: "#ffffff", ...mono, fontWeight: "bold", borderBottom: `2px solid ${C.sbox}44`, width: "100%", textAlign: "center", paddingBottom: 4 }}>S{n.idx}</div>
             {/* Input bits */}
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ display: "flex", gap: 4 }}>
               {n.inNib.map((b, i) => <MiniBit key={i} b={b} />)}
             </div>
             {/* Row / Col derivation */}
-            <div style={{ fontSize: 9, color: "#94a3b8", ...mono, textAlign: "center", lineHeight: 1.4 }}>
+            <div style={{ fontSize: 12, color: "#cbd5e1", ...mono, textAlign: "center", lineHeight: 1.4, fontWeight: "bold" }}>
               {n.inVal.toString(16).toUpperCase()} → r{n.row} c{n.col}
             </div>
             {/* Lookup result tag */}
             <div style={{
-              fontSize: 10, ...mono, fontWeight: "bold",
+              fontSize: 15, ...mono, fontWeight: "bold",
               color: "#0a0f1c", background: C.sbox,
-              borderRadius: 4, padding: "1px 8px",
+              borderRadius: 6, padding: "3px 12px",
+              boxShadow: `0 0 12px ${C.sbox}44`
             }}>
               S[{n.inVal.toString(16).toUpperCase()}] = {n.outVal.toString(16).toUpperCase()}
             </div>
             {/* Output bits */}
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ display: "flex", gap: 4 }}>
               {n.outNib.map((b, i) => <MiniBit key={i} b={b} />)}
             </div>
           </div>
@@ -292,78 +294,78 @@ function PLayerPermView({
       opacity: 0, animation: "stagger-fade 0.5s ease forwards", animationDelay: `${delay}ms`,
       display: "flex", flexDirection: "column", gap: 14, alignItems: "center",
     }}>
-      <div style={{ fontSize: 13, color: C.player, ...mono, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1 }}>
+      <div style={{ fontSize: 24, color: C.player, ...mono, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1 }}>
         P-Layer — Per-Nibble Bit Permutation
       </div>
-      <div style={{ fontSize: 12, color: "#ffffff", ...mono, textAlign: "center", maxWidth: 580 }}>
+      <div style={{ fontSize: 20, color: "#ffffff", ...mono, textAlign: "center", maxWidth: 580 }}>
         Each S-Box output nibble's 4 bits scatter to 4 different positions. Input bit at position <em style={{ color: "#94a3b8" }}>i</em> moves to output position <em style={{ color: C.player }}>P[i]</em>.
       </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 740 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, width: "100%", maxWidth: 880 }}>
         {nibbleCards.map(({ nib, bits, destNibs }) => (
           <div key={nib} style={{
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 5,
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
             background: "#0f172a", border: `1px solid ${C.player}44`,
-            borderRadius: 8, padding: "8px 10px", minWidth: 100,
+            borderRadius: 10, padding: "12px 14px",
           }}>
             {/* Nibble label */}
-            <div style={{ fontSize: 10, color: C.dim, ...mono, fontWeight: "bold" }}>Nib {nib} (bits {nib * 4}–{nib * 4 + 3})</div>
+            <div style={{ fontSize: 14, color: "#ffffff", ...mono, fontWeight: "bold", borderBottom: `2px solid ${C.player}44`, width: "100%", textAlign: "center", paddingBottom: 4 }}>Nib {nib}</div>
 
             {/* Source bit index row (hex) */}
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ display: "flex", gap: 4 }}>
               {bits.map(b => (
                 <div key={b.idx} style={{
-                  width: bsz, height: bsz - 2, display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 8, fontWeight: "bold", ...mono, color: "#94a3b8",
-                  background: "#1e293b", borderRadius: 3,
-                  border: `1px solid #334155`,
+                  width: bsz + 8, height: bsz + 4, display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14, fontWeight: "bold", ...mono, color: "#cbd5e1",
+                  background: "#1e293b", borderRadius: 4,
+                  border: `1px solid #475569`,
                 }}>{toHex(b.idx)}</div>
               ))}
             </div>
 
             {/* INPUT bits row */}
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ display: "flex", gap: 4 }}>
               {bits.map(b => (
                 <div key={b.idx} style={{
-                  width: bsz, height: bsz, display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 12, fontWeight: "bold", ...mono,
+                  width: bsz + 8, height: bsz + 8, display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 20, fontWeight: "bold", ...mono,
                   background: b.inputVal === 1 ? `${C.sbox}33` : "#1e293b",
                   color: b.inputVal === 1 ? C.sbox : "#cbd5e1",
-                  borderRadius: 4, border: `1.5px solid ${b.inputVal === 1 ? `${C.sbox}88` : "#334155"}`,
+                  borderRadius: 8, border: `2px solid ${b.inputVal === 1 ? `${C.sbox}` : "#334155"}`,
                 }}>{b.inputVal}</div>
               ))}
             </div>
 
             {/* P-Layer destination row (hex indices) */}
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ display: "flex", gap: 4 }}>
               {bits.map(b => (
                 <div key={b.idx} style={{
-                  width: bsz, height: bsz - 2, display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 8, fontWeight: "bold", ...mono, color: C.player,
-                  background: `${C.player}18`, borderRadius: 3,
-                  border: `1px solid ${C.player}44`,
+                  width: bsz + 8, height: bsz + 4, display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14, fontWeight: "bold", ...mono, color: C.player,
+                  background: `${C.player}22`, borderRadius: 4,
+                  border: `1px solid ${C.player}66`,
                 }}>{toHex(b.dest)}</div>
               ))}
             </div>
 
             {/* Arrow */}
-            <div style={{ fontSize: 12, color: C.player, lineHeight: 1 }}>↓</div>
+            <div style={{ fontSize: 24, color: C.player, lineHeight: 1, fontWeight: "bold" }}>↓</div>
 
             {/* OUTPUT bits row (value at destination) */}
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ display: "flex", gap: 4 }}>
               {bits.map(b => (
                 <div key={b.idx} style={{
-                  width: bsz, height: bsz, display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 12, fontWeight: "bold", ...mono,
+                  width: bsz + 8, height: bsz + 8, display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 20, fontWeight: "bold", ...mono,
                   background: b.outputVal === 1 ? `${C.player}33` : "#1e293b",
                   color: b.outputVal === 1 ? C.player : "#cbd5e1",
-                  borderRadius: 4, border: `1.5px solid ${b.outputVal === 1 ? `${C.player}88` : "#334155"}`,
+                  borderRadius: 8, border: `2px solid ${b.outputVal === 1 ? `${C.player}` : "#334155"}`,
                 }}>{b.outputVal}</div>
               ))}
             </div>
 
             {/* Scatter info */}
-            <div style={{ fontSize: 7, color: "#64748b", ...mono, textAlign: "center" }}>
+            <div style={{ fontSize: 14, color: "#ffffff", ...mono, textAlign: "center", fontWeight: "bold", marginTop: 4, opacity: 1 }}>
               → nibs {destNibs.join(", ")}
             </div>
           </div>
@@ -393,10 +395,10 @@ function PLayerOutputFormation({ outputBits, delay = 0 }: { outputBits: Bit[]; d
       background: "#080c14", border: `1px solid ${C.player}33`,
       borderRadius: 10, padding: "14px 16px", maxWidth: 760, width: "100%", marginTop: 10
     }}>
-      <div style={{ fontSize: 13, color: C.player, ...mono, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1 }}>
+      <div style={{ fontSize: 24, color: C.player, ...mono, fontWeight: "bold", textTransform: "uppercase", letterSpacing: 1 }}>
         Output Nibble Assembly
       </div>
-      <div style={{ fontSize: 12, color: "#ffffff", ...mono, textAlign: "center", maxWidth: 580 }}>
+      <div style={{ fontSize: 20, color: "#ffffff", ...mono, textAlign: "center", maxWidth: 580 }}>
         The permuted bits assemble into the 16 4-bit output nibbles. For example, bits at positions <em style={{ color: C.player }}>00, 01, 02, 03</em> form output <em style={{ color: C.player }}>Nib 0</em>.
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", maxWidth: 740 }}>
@@ -406,38 +408,39 @@ function PLayerOutputFormation({ outputBits, delay = 0 }: { outputBits: Bit[]; d
             background: "#0f172a", border: `1px solid ${C.player}44`,
             borderRadius: 8, padding: "8px 10px", minWidth: 90,
           }}>
-            <div style={{ fontSize: 10, color: C.dim, ...mono, fontWeight: "bold" }}>Out Nib {nib}</div>
-            
+            <div style={{ fontSize: 16, color: "#ffffff", ...mono, fontWeight: "bold", borderBottom: `2px solid ${C.player}44`, width: "100%", textAlign: "center", paddingBottom: 4 }}>Out Nib {nib}</div>
+
             {/* Output bit positions */}
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ display: "flex", gap: 4 }}>
               {[0, 1, 2, 3].map(i => (
                 <div key={i} style={{
-                  width: bsz, height: bsz - 2, display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 8, fontWeight: "bold", ...mono, color: C.player,
-                  background: `${C.player}18`, borderRadius: 3,
-                  border: `1px solid ${C.player}44`,
+                  width: bsz + 8, height: bsz + 4, display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14, fontWeight: "bold", ...mono, color: C.player,
+                  background: `${C.player}22`, borderRadius: 4,
+                  border: `1px solid ${C.player}66`,
                 }}>{toHex(start + i)}</div>
               ))}
             </div>
 
             {/* Output bit values */}
-            <div style={{ display: "flex", gap: 2 }}>
+            <div style={{ display: "flex", gap: 4 }}>
               {bits.map((b, i) => (
                 <div key={i} style={{
-                  width: bsz, height: bsz, display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 12, fontWeight: "bold", ...mono,
+                  width: bsz + 8, height: bsz + 8, display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 20, fontWeight: "bold", ...mono,
                   background: b === 1 ? `${C.player}33` : "#1e293b",
                   color: b === 1 ? C.player : "#cbd5e1",
-                  borderRadius: 4, border: `1.5px solid ${b === 1 ? `${C.player}88` : "#334155"}`,
+                  borderRadius: 8, border: `2px solid ${b === 1 ? `${C.player}` : "#334155"}`,
                 }}>{b}</div>
               ))}
             </div>
-            
-            <div style={{ fontSize: 12, color: C.player, lineHeight: 1 }}>↓</div>
-            
+
+            <div style={{ fontSize: 24, color: C.player, lineHeight: 1, fontWeight: "bold" }}>↓</div>
+
             <div style={{
-              fontSize: 14, fontWeight: "bold", ...mono, color: "#0a0f1c",
-              background: C.player, padding: "2px 12px", borderRadius: 4,
+              fontSize: 22, fontWeight: "bold", ...mono, color: "#0a0f1c",
+              background: C.player, padding: "4px 18px", borderRadius: 6,
+              boxShadow: `0 0 12px ${C.player}66`
             }}>
               {hexVal}
             </div>
@@ -453,11 +456,12 @@ function SectionLabel({ text, color, sub }: { text: string; color?: string; sub?
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, marginBottom: 4 }}>
       <div style={{
-        fontSize: 20, fontWeight: "bold", fontFamily: "monospace",
+        fontSize: 28, fontWeight: "bold", fontFamily: "monospace",
         color: color ?? "#f1f5f9",
-        textShadow: color ? `0 0 24px ${color}66` : "none",
+        textShadow: color ? `0 0 32px ${color}88` : "none",
+        letterSpacing: 2,
       }}>{text}</div>
-      {sub && <div style={{ fontSize: 14, color: "#ffffff", fontFamily: "monospace", textAlign: "center", maxWidth: 580 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 18, color: "#cbd5e1", fontFamily: "monospace", textAlign: "center", maxWidth: 640, fontWeight: "bold" }}>{sub}</div>}
     </div>
   );
 }
@@ -520,14 +524,14 @@ export function PresentSchematicAnim({ state }: PresentSchematicAnimProps) {
   const TOTAL = totalRounds * STEPS_PER_ROUND + 2; // +2 for intro and outro
   const STEP_LABELS = makeStepLabels(totalRounds);
 
-  const [sub, setSub]       = useState(0);
+  const [sub, setSub] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speedIdx, setSpeedIdx] = useState(1);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     setSub(0); setPlaying(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.plaintext.join(""), state.totalRounds, state.mode]);
 
   useEffect(() => {
@@ -542,9 +546,21 @@ export function PresentSchematicAnim({ state }: PresentSchematicAnimProps) {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [playing, speedIdx, TOTAL]);
 
-  const next  = useCallback(() => setSub(p => Math.min(p + 1, TOTAL - 1)), [TOTAL]);
-  const prev  = useCallback(() => setSub(p => Math.max(p - 1, 0)), []);
+  const next = useCallback(() => setSub(p => Math.min(p + 1, TOTAL - 1)), [TOTAL]);
+  const prev = useCallback(() => setSub(p => Math.max(p - 1, 0)), []);
   const reset = useCallback(() => { setSub(0); setPlaying(false); }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") {
+        next();
+      } else if (e.key === "ArrowLeft") {
+        prev();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [next, prev]);
 
   function noData() {
     return (
@@ -602,16 +618,16 @@ export function PresentSchematicAnim({ state }: PresentSchematicAnimProps) {
     }
 
     // ── Round sub-steps ───────────────────────────────────────────────────────
-    const rndIdx  = Math.floor((sub - 1) / STEPS_PER_ROUND); // 0-based
-    const phase   = ((sub - 1) % STEPS_PER_ROUND) + 1;       // 1..4
-    const rndNum  = rndIdx + 1;
-    const isLast  = rndNum === totalRounds;
-    const rd      = state.history[rndIdx] ?? null;
+    const rndIdx = Math.floor((sub - 1) / STEPS_PER_ROUND); // 0-based
+    const phase = ((sub - 1) % STEPS_PER_ROUND) + 1;       // 1..4
+    const rndNum = rndIdx + 1;
+    const isLast = rndNum === totalRounds;
+    const rd = state.history[rndIdx] ?? null;
 
     // ── Phase 1: Input & Key ──────────────────────────────────────────────────
     if (phase === 1) {
       const inputBits = rd ? rd.inputState : Array(64).fill(null) as (Bit | null)[];
-      const keyBits   = rd ? rd.roundKey   : Array(64).fill(null) as (Bit | null)[];
+      const keyBits = rd ? rd.roundKey : Array(64).fill(null) as (Bit | null)[];
       return (
         <div style={col}>
           <SectionLabel
@@ -647,9 +663,9 @@ export function PresentSchematicAnim({ state }: PresentSchematicAnimProps) {
 
     // ── Phase 2: AddRoundKey ──────────────────────────────────────────────────
     if (phase === 2) {
-      const inputBits = rd ? rd.inputState  : Array(64).fill(null) as (Bit | null)[];
-      const keyBits   = rd ? rd.roundKey    : Array(64).fill(null) as (Bit | null)[];
-      const outBits   = rd ? rd.afterAddKey : Array(64).fill(null) as (Bit | null)[];
+      const inputBits = rd ? rd.inputState : Array(64).fill(null) as (Bit | null)[];
+      const keyBits = rd ? rd.roundKey : Array(64).fill(null) as (Bit | null)[];
+      const outBits = rd ? rd.afterAddKey : Array(64).fill(null) as (Bit | null)[];
       return (
         <div style={col}>
           <SectionLabel
@@ -675,8 +691,8 @@ export function PresentSchematicAnim({ state }: PresentSchematicAnimProps) {
 
     // ── Phase 3: S-Box Layer ──────────────────────────────────────────────────
     if (phase === 3) {
-      const inBits  = rd ? rd.afterAddKey : Array(64).fill(null) as (Bit | null)[];
-      const outBits = rd ? rd.afterSBox   : Array(64).fill(null) as (Bit | null)[];
+      const inBits = rd ? rd.afterAddKey : Array(64).fill(null) as (Bit | null)[];
+      const outBits = rd ? rd.afterSBox : Array(64).fill(null) as (Bit | null)[];
       return (
         <div style={col}>
           <SectionLabel
@@ -702,8 +718,8 @@ export function PresentSchematicAnim({ state }: PresentSchematicAnimProps) {
     if (phase === 4) {
       if (!isLast) {
         // P-Layer
-        const inBits  = rd ? rd.afterSBox   : Array(64).fill(null) as (Bit | null)[];
-        const outBits = rd ? rd.afterPLayer  : Array(64).fill(null) as (Bit | null)[];
+        const inBits = rd ? rd.afterSBox : Array(64).fill(null) as (Bit | null)[];
+        const outBits = rd ? rd.afterPLayer : Array(64).fill(null) as (Bit | null)[];
         return (
           <div style={col}>
             <SectionLabel
@@ -727,9 +743,9 @@ export function PresentSchematicAnim({ state }: PresentSchematicAnimProps) {
         );
       } else {
         // Final AddRoundKey
-        const inBits   = rd ? rd.afterSBox    : Array(64).fill(null) as (Bit | null)[];
-        const keyBits  = rd ? (rd.extraRoundKey ?? rd.roundKey) : Array(64).fill(null) as (Bit | null)[];
-        const outBits  = rd ? (rd.extraAddKey  ?? rd.afterPLayer) : Array(64).fill(null) as (Bit | null)[];
+        const inBits = rd ? rd.afterSBox : Array(64).fill(null) as (Bit | null)[];
+        const keyBits = rd ? (rd.extraRoundKey ?? rd.roundKey) : Array(64).fill(null) as (Bit | null)[];
+        const outBits = rd ? (rd.extraAddKey ?? rd.afterPLayer) : Array(64).fill(null) as (Bit | null)[];
         return (
           <div style={col}>
             <SectionLabel
@@ -769,8 +785,8 @@ export function PresentSchematicAnim({ state }: PresentSchematicAnimProps) {
             key={i}
             onClick={() => setSub(i)}
             style={{
-              display: "inline-block", padding: "3px 10px", margin: "0 2px",
-              borderRadius: 4, border: "none", cursor: "pointer", fontSize: 10,
+              display: "inline-block", padding: "5px 12px", margin: "0 3px",
+              borderRadius: 6, border: "none", cursor: "pointer", fontSize: 12,
               background: i === sub ? "#1d4ed8" : (i < sub ? "#1e3a5f" : "transparent"),
               color: i === sub ? "#fff" : (i < sub ? "#93c5fd" : C.dim),
               fontFamily: "monospace", fontWeight: i === sub ? "bold" : "normal",
@@ -800,8 +816,8 @@ export function PresentSchematicAnim({ state }: PresentSchematicAnimProps) {
       </div>
 
       {/* ── Main visualization ───────────────────────────────────────────────── */}
-      <div style={{ padding: "28px 32px 32px", minHeight: 460, display: "flex", alignItems: "flex-start", justifyContent: "center", overflowY: "auto" }}>
-        <div style={{ animation: "fadeSlide 0.3s ease", maxWidth: 760, width: "100%" }}>
+      <div style={{ padding: "16px 32px 32px", display: "flex", alignItems: "flex-start", justifyContent: "center", overflow: "hidden" }}>
+        <div style={{ animation: "fadeSlide 0.3s ease", maxWidth: 760, width: "100%", zoom: 0.75 }}>
           {panel()}
         </div>
       </div>
