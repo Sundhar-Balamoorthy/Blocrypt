@@ -46,20 +46,23 @@ import { PresentRoundDetailView } from "@/components/blocrypt/present-round-deta
 import { PresentSchematic } from "@/components/blocrypt/present-schematic";
 import { PresentSchematicAnim } from "@/components/blocrypt/present-schematic-anim";
 import { PresentFullCycle } from "@/components/blocrypt/present-full-cycle";
-import { Lock, Unlock, ShieldCheck, Cpu, Grid3X3, GraduationCap } from "lucide-react";
+import { Lock, Unlock, ShieldCheck, Cpu, Grid3X3, GraduationCap, Activity } from "lucide-react";
 import { WorksheetView } from "@/components/blocrypt/worksheet-view";
+import { ChaosAnalysisView } from "@/components/blocrypt/chaos-analysis-view";
+import { CipherHub } from "@/components/blocrypt/cipher-hub";
+import { Home } from "lucide-react";
 
 // ─── Feistel Constants ────────────────────────────────────────
 const initialPlaintext = DEFAULT_PLAINTEXT as Bit[];
 const MIN_ROUNDS = 1;
 const MAX_ROUNDS = 16;
 
-type CipherMode = "feistel" | "sdes" | "present";
+type CipherMode = "hub" | "feistel" | "sdes" | "present";
 
 // ─── Main Page ────────────────────────────────────────────────
 export default function HomePage() {
   // Cipher selector
-  const [cipher, setCipher] = useState<CipherMode>("feistel");
+  const [cipher, setCipher] = useState<CipherMode>("hub");
 
   // ─── Feistel state ───────────────────────────────────────────
   const [configuredRounds, setConfiguredRounds] = useState(DEFAULT_ROUNDS);
@@ -224,59 +227,70 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="border-b border-border">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-3">
-          <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#0c4a6e]">
-            <Lock className="h-4.5 w-4.5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-lg font-bold font-mono tracking-tight text-foreground text-balance">
-              BLOCRYPT
-            </h1>
-            <p className="text-xs text-muted-foreground font-mono">
-              {cipher === "feistel" ? "Feistel Cipher Simulator" : 
-               cipher === "sdes" ? "S-DES Cipher Simulator" : 
-               "PRESENT Cipher Simulator"}
-            </p>
+      <header className="border-b border-border bg-card/30 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row items-center gap-6">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 shadow-lg shadow-primary/5">
+              <Lock className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl font-black tracking-tighter text-foreground uppercase">
+                BLOCRYPT
+              </h1>
+              <p className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest">
+                {cipher === "hub" ? "Block Cipher Cryptanalysis tool" : 
+                 cipher === "feistel" ? "Feistel Cipher Simulator" : 
+                 cipher === "sdes" ? "S-DES Cipher Simulator" : 
+                 "PRESENT Cipher Simulator"}
+              </p>
+            </div>
           </div>
 
-          {/* Cipher Selector — right side of header */}
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest hidden sm:block">
-              Select Cipher:
-            </span>
-            <div className="flex rounded-lg border border-border overflow-hidden">
+          {/* Top Level View Selector */}
+          <div className="md:ml-auto w-full md:w-auto overflow-x-auto">
+            <div className="flex bg-secondary/50 p-1 rounded-xl border border-border">
               <button
-                onClick={() => setCipher("feistel")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-semibold transition-colors ${
-                  cipher === "feistel"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-secondary-foreground hover:bg-accent"
+                onClick={() => setCipher("hub")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+                  cipher === "hub"
+                    ? "bg-primary text-primary-foreground shadow-lg"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
               >
-                <ShieldCheck className="h-3.5 w-3.5" />
+                <Home className="h-4 w-4" />
+                Hub
+              </button>
+              <button
+                onClick={() => setCipher("feistel")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
+                  cipher === "feistel"
+                    ? "bg-primary text-primary-foreground shadow-lg"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                }`}
+              >
+                <ShieldCheck className="h-4 w-4" />
                 Feistel
               </button>
               <button
                 onClick={() => setCipher("sdes")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-semibold transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
                   cipher === "sdes"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-secondary-foreground hover:bg-accent"
+                    ? "bg-primary text-primary-foreground shadow-lg"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
               >
-                <Cpu className="h-3.5 w-3.5" />
+                <Cpu className="h-4 w-4" />
                 S-DES
               </button>
               <button
                 onClick={() => setCipher("present")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-semibold transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 ${
                   cipher === "present"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary text-secondary-foreground hover:bg-accent"
+                    ? "bg-primary text-primary-foreground shadow-lg"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
               >
-                <Grid3X3 className="h-3.5 w-3.5" />
+                <Grid3X3 className="h-4 w-4" />
                 PRESENT
               </button>
             </div>
@@ -284,7 +298,11 @@ export default function HomePage() {
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* ════════════════ CIPHER HUB ════════════════ */}
+        {cipher === "hub" && (
+          <CipherHub onStartCipher={(c) => setCipher(c)} />
+        )}
 
         {/* ════════════════ FEISTEL CIPHER ════════════════ */}
         {cipher === "feistel" && (
@@ -305,6 +323,10 @@ export default function HomePage() {
               <TabsTrigger value="practice" className="font-mono text-xs flex items-center gap-1.5">
                 <GraduationCap className="h-3.5 w-3.5" />
                 Practice
+              </TabsTrigger>
+              <TabsTrigger value="chaos" className="font-mono text-xs flex items-center gap-1.5">
+                <Activity className="h-3.5 w-3.5" />
+                Chaos
               </TabsTrigger>
             </TabsList>
 
@@ -492,6 +514,22 @@ export default function HomePage() {
                 <WorksheetView cipher="feistel" />
               </div>
             </TabsContent>
+
+            {/* CHAOS ANALYSIS */}
+            <TabsContent value="chaos">
+              <div className="max-w-5xl">
+                <div className="mb-4">
+                  <h2 className="text-sm font-mono font-bold text-foreground flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-primary" />
+                    Chaos Cryptography Analysis
+                  </h2>
+                  <p className="text-xs text-muted-foreground font-mono mt-1">
+                    Regression-based analysis treating the cipher as a deterministic chaotic function.
+                  </p>
+                </div>
+                <ChaosAnalysisView cipher="feistel" />
+              </div>
+            </TabsContent>
           </Tabs>
         )}
 
@@ -514,6 +552,10 @@ export default function HomePage() {
               <TabsTrigger value="practice" className="font-mono text-xs flex items-center gap-1.5">
                 <GraduationCap className="h-3.5 w-3.5" />
                 Practice
+              </TabsTrigger>
+              <TabsTrigger value="chaos" className="font-mono text-xs flex items-center gap-1.5">
+                <Activity className="h-3.5 w-3.5" />
+                Chaos
               </TabsTrigger>
             </TabsList>
 
@@ -654,6 +696,22 @@ export default function HomePage() {
                 <WorksheetView cipher="sdes" />
               </div>
             </TabsContent>
+
+            {/* S-DES CHAOS ANALYSIS */}
+            <TabsContent value="chaos">
+              <div className="max-w-5xl">
+                <div className="mb-4">
+                  <h2 className="text-sm font-mono font-bold text-foreground flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-primary" />
+                    Chaos Cryptography Analysis (S-DES)
+                  </h2>
+                  <p className="text-xs text-muted-foreground font-mono mt-1">
+                    Regression-based analysis of S-DES deterministic chaos.
+                  </p>
+                </div>
+                <ChaosAnalysisView cipher="sdes" />
+              </div>
+            </TabsContent>
           </Tabs>
         )}
 
@@ -668,6 +726,10 @@ export default function HomePage() {
               <TabsTrigger value="practice" className="font-mono text-xs flex items-center gap-1.5">
                 <GraduationCap className="h-3.5 w-3.5" />
                 Practice
+              </TabsTrigger>
+              <TabsTrigger value="chaos" className="font-mono text-xs flex items-center gap-1.5">
+                <Activity className="h-3.5 w-3.5" />
+                Chaos
               </TabsTrigger>
             </TabsList>
 
@@ -799,6 +861,22 @@ export default function HomePage() {
                   </p>
                 </div>
                 <WorksheetView cipher="present" />
+              </div>
+            </TabsContent>
+
+            {/* PRESENT CHAOS ANALYSIS */}
+            <TabsContent value="chaos">
+              <div className="max-w-5xl">
+                <div className="mb-4">
+                  <h2 className="text-sm font-mono font-bold text-foreground flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-primary" />
+                    Chaos Cryptography Analysis (PRESENT)
+                  </h2>
+                  <p className="text-xs text-muted-foreground font-mono mt-1">
+                    Regression-based analysis of PRESENT SPN-structure chaos.
+                  </p>
+                </div>
+                <ChaosAnalysisView cipher="present" />
               </div>
             </TabsContent>
           </Tabs>

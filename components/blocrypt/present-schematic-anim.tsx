@@ -31,32 +31,92 @@ const SPEEDS = [
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function hexNibble(bits: Bit[]): string {
+function hexNibble(bits: (Bit | null)[]): string {
+  if (bits.some((b) => b === null)) return "?";
   return parseInt(bits.join(""), 2).toString(16).toUpperCase();
 }
 
-function bitsToHex(bits: Bit[]): string {
+function bitsToHex(bits: (Bit | null)[]): string {
   const nibbles: string[] = [];
   for (let i = 0; i < bits.length; i += 4) {
-    nibbles.push(hexNibble(bits.slice(i, i + 4) as Bit[]));
+    nibbles.push(hexNibble(bits.slice(i, i + 4)));
   }
   return nibbles.join("");
 }
 
-function bitsToHexShort(bits: Bit[], max = 8): string {
+function bitsToHexShort(bits: (Bit | null)[], max = 8): string {
   const hex = bitsToHex(bits);
   return hex.length > max ? hex.slice(0, max) + "…" : hex;
 }
 
+function NibbleBox({
+  nibble,
+  idx,
+  clr,
+}: {
+  nibble: (Bit | null)[];
+  idx: number;
+  clr: string;
+}) {
+  const val = hexNibble(nibble);
+  const isNonZero = val !== "?" && val !== "0";
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 4,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 18,
+          color: "#ffffff",
+          fontFamily: "monospace",
+          fontWeight: "bold",
+          opacity: 0.9,
+        }}
+      >
+        {idx}
+      </div>
+      <div
+        style={{
+          width: 48,
+          height: 48,
+          background: isNonZero ? `${clr}22` : "#1e293b",
+          border: `2px solid ${isNonZero ? clr : "#334155"}`,
+          borderRadius: 8,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 26,
+          fontWeight: "bold",
+          fontFamily: "monospace",
+          color: isNonZero ? clr : "#cbd5e1",
+          boxShadow: isNonZero ? `0 0 10px ${clr}55` : "none",
+          transition: "all 0.3s ease",
+        }}
+      >
+        {val}
+      </div>
+    </div>
+  );
+}
+
 // ── NibbleRow: shows 64-bit state as 16 hex nibbles in 2 rows of 8 ─────────
 function NibbleRow({
-  bits, color, delay = 0, label, labelColor,
+  bits,
+  label,
+  labelColor,
+  color,
+  delay = 0,
 }: {
   bits: (Bit | null)[];
-  color?: string;
-  delay?: number;
   label?: string;
   labelColor?: string;
+  color?: string;
+  delay?: number;
 }) {
   const clr = color ?? C.plain;
   const chunks: (Bit | null)[][] = [];
@@ -64,56 +124,59 @@ function NibbleRow({
     chunks.push(bits.slice(i, i + 4));
   }
 
-  function NibbleBox({ nibble, idx }: { nibble: (Bit | null)[]; idx: number }) {
-    const hasNull = nibble.some(b => b === null);
-    const val = hasNull ? "?" : hexNibble(nibble as Bit[]);
-    const isNonZero = !hasNull && val !== "0";
-    return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-        <div style={{ fontSize: 18, color: "#ffffff", fontFamily: "monospace", fontWeight: "bold", opacity: 0.9 }}>{idx}</div>
-        <div style={{
-          width: 48, height: 48,
-          background: isNonZero ? `${clr}22` : "#1e293b",
-          border: `2px solid ${isNonZero ? clr : "#334155"}`,
-          borderRadius: 8,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 26, fontWeight: "bold", fontFamily: "monospace",
-          color: isNonZero ? clr : "#cbd5e1",
-          boxShadow: isNonZero ? `0 0 10px ${clr}55` : "none",
-          transition: "all 0.3s ease",
-        }}>
-          {val}
-        </div>
-      </div>
-    );
-  }
-
   // Split 16 nibbles into two rows of 8
   const row1 = chunks.slice(0, 8);
   const row2 = chunks.slice(8, 16);
 
   return (
-    <div style={{
-      display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-      opacity: 0, animation: "stagger-fade 0.5s ease forwards", animationDelay: `${delay}ms`,
-    }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 6,
+        opacity: 0,
+        animation: "stagger-fade 0.5s ease forwards",
+        animationDelay: `${delay}ms`,
+      }}
+    >
       {label && (
-        <div style={{
-          fontSize: 20, fontFamily: "monospace", color: labelColor ?? "#ffffff",
-          textTransform: "uppercase", letterSpacing: 2, fontWeight: "bold",
-          marginBottom: 4,
-        }}>{label}</div>
+        <div
+          style={{
+            fontSize: 20,
+            fontFamily: "monospace",
+            color: labelColor ?? "#ffffff",
+            textTransform: "uppercase",
+            letterSpacing: 2,
+            fontWeight: "bold",
+            marginBottom: 4,
+          }}
+        >
+          {label}
+        </div>
       )}
       <div style={{ display: "flex", gap: 8 }}>
-        {row1.map((ch, i) => <NibbleBox key={i} nibble={ch} idx={i} />)}
+        {row1.map((ch, i) => (
+          <NibbleBox key={i} nibble={ch} idx={i} clr={clr} />
+        ))}
       </div>
       {row2.length > 0 && (
         <div style={{ display: "flex", gap: 8 }}>
-          {row2.map((ch, i) => <NibbleBox key={i + 8} nibble={ch} idx={i + 8} />)}
+          {row2.map((ch, i) => (
+            <NibbleBox key={i + 8} nibble={ch} idx={i + 8} clr={clr} />
+          ))}
         </div>
       )}
-      <div style={{ fontSize: 16, color: "#cbd5e1", fontFamily: "monospace", fontWeight: "bold", marginTop: 6 }}>
-        Hex: {bits.some(b => b === null) ? "?" : bitsToHexShort(bits as Bit[], 16)}
+      <div
+        style={{
+          fontSize: 16,
+          color: "#cbd5e1",
+          fontFamily: "monospace",
+          fontWeight: "bold",
+          marginTop: 6,
+        }}
+      >
+        Hex: {bitsToHexShort(bits, 16)}
       </div>
     </div>
   );

@@ -13,13 +13,14 @@ import {
 import { PracticeBitDisplay } from "./practice-bit-display";
 import { PracticeReferenceTables } from "./practice-reference-tables";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle2, RotateCcw, Lightbulb, Zap, Trophy } from "lucide-react";
+import { CheckCircle2, RotateCcw, Lightbulb, Zap, Trophy, FileDown } from "lucide-react";
 
 export function WorksheetView({ cipher }: { cipher: "feistel" | "sdes" | "present" }) {
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [studentBits, setStudentBits] = useState<PracticeBit[]>([]);
   const [showFeedback, setShowFeedback] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("easy");
 
   const startNewChallenge = useCallback(() => {
@@ -54,6 +55,147 @@ export function WorksheetView({ cipher }: { cipher: "feistel" | "sdes" | "presen
     if (showFeedback) setShowFeedback(false);
   };
 
+  const handleDownloadPDF = async () => {
+    if (!challenge) return;
+    setIsExporting(true);
+    try {
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      
+      // Page 1: The Question
+      doc.setFillColor(30, 41, 59); // bg-slate-900 equivalent
+      doc.rect(0, 0, pageWidth, 297, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22);
+      doc.text("BLOCRYPT PRACTICE WORKSHEET", 20, 30);
+      
+      doc.setFontSize(12);
+      doc.setTextColor(148, 163, 184);
+      doc.text(`Cipher: ${challenge.cipher.toUpperCase()} | Difficulty: ${challenge.difficulty.toUpperCase()}`, 20, 40);
+      
+      doc.setDrawColor(51, 65, 85);
+      doc.line(20, 45, pageWidth - 20, 45);
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.text("QUESTION", 20, 60);
+      doc.setFontSize(11);
+      doc.setTextColor(203, 213, 225);
+      const splitDesc = doc.splitTextToSize(challenge.description, pageWidth - 40);
+      doc.text(splitDesc, 20, 70);
+      
+      doc.setTextColor(255, 255, 255);
+      doc.text("GIVEN PARAMETERS:", 20, 95);
+      let yPos = 105;
+      
+      if (challenge.given.plaintext) {
+        doc.text(`Plaintext: [ ${challenge.given.plaintext.join(" ")} ]`, 25, yPos);
+        yPos += 10;
+      }
+      if (challenge.given.inputL) {
+        doc.text(`Input L: [ ${challenge.given.inputL.join(" ")} ]`, 25, yPos);
+        yPos += 10;
+        doc.text(`Input R: [ ${challenge.given.inputR?.join(" ") ?? ""} ]`, 25, yPos);
+        yPos += 10;
+      }
+      if (challenge.given.key !== undefined) {
+        const keyStr = Array.isArray(challenge.given.key) ? challenge.given.key.join(", ") : challenge.given.key;
+        doc.text(`Key(s): ${keyStr}`, 25, yPos);
+        yPos += 10;
+      }
+
+      doc.setFontSize(14);
+      doc.text("PUZZLE GRID:", 20, yPos + 10);
+      yPos += 25;
+      
+      // Draw the puzzle grid
+      challenge.answer.forEach((bit, i) => {
+        const x = 20 + (i % 8) * 15;
+        const y = yPos + Math.floor(i / 8) * 15;
+        doc.setDrawColor(71, 85, 105);
+        doc.rect(x, y, 12, 12);
+        if (!challenge.hiddenIndices.includes(i)) {
+          doc.text(bit.toString(), x + 4, y + 8);
+        } else {
+          doc.setTextColor(100, 116, 139);
+          doc.text("?", x + 4, y + 8);
+          doc.setTextColor(255, 255, 255);
+        }
+      });
+
+      // Page 2: Answer & Explanation
+      doc.addPage();
+      doc.setFillColor(15, 23, 42); // Even darker
+      doc.rect(0, 0, pageWidth, 297, 'F');
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.text("SOLUTION & EXPLANATION", 20, 30);
+      
+      doc.setFontSize(12);
+      doc.setTextColor(74, 222, 128); // Emerald-400
+      doc.text(`Final Answer: [ ${challenge.answer.join(" ")} ]`, 20, 45);
+      
+      doc.setDrawColor(30, 41, 59);
+      doc.line(20, 50, pageWidth - 20, 50);
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(14);
+      doc.text("STEP-BY-STEP DERIVATION", 20, 65);
+      
+      yPos = 75;
+      if (challenge.explanationSteps) {
+        challenge.explanationSteps.forEach((step, i) => {
+          if (yPos > 260) {
+            doc.addPage();
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, pageWidth, 297, 'F');
+            yPos = 30;
+          }
+          
+          doc.setTextColor(148, 163, 184);
+          doc.setFontSize(10);
+          doc.text(step.label.toUpperCase(), 20, yPos);
+          
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(11);
+          const splitStep = doc.splitTextToSize(step.details, pageWidth - 60);
+          doc.text(splitStep, 25, yPos + 6);
+          
+          yPos += 10 + (splitStep.length * 5);
+
+          if (step.table) {
+            doc.setFont("courier", "normal");
+            doc.setFontSize(9);
+            doc.setTextColor(148, 163, 184);
+            const splitTable = doc.splitTextToSize(step.table, pageWidth - 70);
+            doc.text(splitTable, 30, yPos);
+            yPos += (splitTable.length * 4) + 5;
+            doc.setFont("helvetica", "normal");
+          }
+          
+          doc.setTextColor(96, 165, 250); // Blue-400
+          doc.setFontSize(11);
+          doc.text(`Result: [ ${step.bits.join(" ")} ]`, 25, yPos);
+          
+          yPos += 15;
+          doc.setDrawColor(30, 41, 59);
+          doc.line(25, yPos - 5, pageWidth - 25, yPos - 5);
+        });
+      } else {
+        doc.text("Explanation details not available for this puzzle type.", 20, 80);
+      }
+      
+      doc.save(`blocrypt-worksheet-${challenge.cipher}.pdf`);
+    } catch (error) {
+      console.error("PDF Export failed", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (!challenge) return null;
 
   const isCompleted = challenge.hiddenIndices.every(idx => studentBits[idx] !== -1);
@@ -86,6 +228,16 @@ export function WorksheetView({ cipher }: { cipher: "feistel" | "sdes" | "presen
           >
              <RotateCcw className="h-3.5 w-3.5" />
              Refresh Puzzle
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleDownloadPDF}
+            disabled={isExporting}
+            className="gap-2 border-primary/20 hover:border-primary/50 text-xs font-mono"
+          >
+             <FileDown className="h-3.5 w-3.5" />
+             {isExporting ? "Generating..." : "Download Worksheet"}
           </Button>
        </div>
 
@@ -142,7 +294,7 @@ export function WorksheetView({ cipher }: { cipher: "feistel" | "sdes" | "presen
                          <div className="flex flex-col gap-1.5">
                             <span className="text-[9px] font-mono text-muted-foreground/50">INPUT R</span>
                             <div className="flex gap-1.5">
-                               {challenge.given.inputR.map((b, i) => (
+                               {challenge.given.inputR?.map((b, i) => (
                                   <div key={i} className="w-8 h-8 flex items-center justify-center rounded-md bg-[var(--bit-r)]/20 text-[var(--bit-r)] border border-[var(--bit-r)]/30 font-mono text-xs">{b}</div>
                                ))}
                             </div>

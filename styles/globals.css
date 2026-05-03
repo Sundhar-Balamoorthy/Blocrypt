@@ -37,6 +37,14 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Bit Colors */
+  --bit-l: #60a5fa;
+  --bit-r: #34d399;
+  --bit-f: #f59e0b;
+  --bit-key: #4ade80;
+  --bit-xor: #fb923c;
+  --bit-0: #1e293b;
 }
 
 .dark {
@@ -72,6 +80,14 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+
+  /* Bit Colors - same for now as they are already balanced */
+  --bit-l: #60a5fa;
+  --bit-r: #34d399;
+  --bit-f: #f59e0b;
+  --bit-key: #4ade80;
+  --bit-xor: #fb923c;
+  --bit-0: #1e293b;
 }
 
 @theme inline {

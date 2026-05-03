@@ -71,8 +71,7 @@ export function FullCycleView({
     if (!element) return;
     try {
       const { toPng } = await import("html-to-image");
-      const jsPDFModule = await import("jspdf/dist/jspdf.umd.min.js");
-      const jsPDF = jsPDFModule.jsPDF;
+      const { jsPDF } = await import("jspdf");
       
       const imgData = await toPng(element, { quality: 0.95, backgroundColor: 'hsl(215, 25%, 10%)' });
       

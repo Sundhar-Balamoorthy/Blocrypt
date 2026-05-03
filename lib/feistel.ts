@@ -251,30 +251,76 @@ function randomBits(n: number): Bit[] {
 
 export function generateDataset(
   numSamples: number = 1000,
-  keys: number[] = [3, 5, 7, 9]
+  baseKeys: number[] = [3, 5, 7, 9]
 ): DatasetRow[] {
   const dataset: DatasetRow[] = [];
+  const seen = new Set<string>();
   const halfSamples = Math.floor(numSamples / 2);
+  
+  // Helper to stringify a sample for uniqueness check
+  const getSampleKey = (p: Bit[], c: Bit[], l: number) => 
+    `${p.join("")}|${c.join("")}|${l}`;
 
   // Valid ciphertext samples (label = 1)
-  for (let i = 0; i < halfSamples; i++) {
+  let validCount = 0;
+  let attempts = 0;
+  const maxAttempts = numSamples * 50; // Increased to handle collisions in small space
+
+  while (validCount < halfSamples && attempts < maxAttempts) {
+    attempts++;
     const p = randomBits(8);
-    let state = createInitialState(p, keys.length, keys, "encryption");
+    
+    // If we need more unique samples than the 8-bit space allows (256), 
+    // we vary the keys per sample to ensure variety.
+    let currentKeys = baseKeys;
+    if (validCount >= 256) {
+      // Use random keys for each sample to maximize the (P, C) mapping space.
+      // This allows for up to 65,536 unique (P, C) pairs.
+      currentKeys = baseKeys.map(() => Math.floor(Math.random() * 16));
+    }
+      
+    let state = createInitialState(p, currentKeys.length, currentKeys, "encryption");
     state = runAllRounds(state);
-    dataset.push({
-      plaintext: p,
-      ciphertext: [...state.L, ...state.R] as Bit[],
-      label: 1,
-    });
+    const c = [...state.L, ...state.R] as Bit[];
+    
+    const key = getSampleKey(p, c, 1);
+    if (!seen.has(key)) {
+      seen.add(key);
+      dataset.push({
+        plaintext: p,
+        ciphertext: c,
+        label: 1,
+      });
+      validCount++;
+    }
   }
 
   // Random noise samples (label = 0)
-  for (let i = 0; i < numSamples - halfSamples; i++) {
-    dataset.push({
-      plaintext: randomBits(8),
-      ciphertext: randomBits(8),
-      label: 0,
-    });
+  let noiseCount = 0;
+  const noiseTarget = numSamples - halfSamples;
+  while (noiseCount < noiseTarget && attempts < maxAttempts * 2) {
+    attempts++;
+    const p = randomBits(8);
+    const c = randomBits(8);
+    
+    // Security check: Ensure this random noise is NOT accidentally a valid ciphertext
+    let state = createInitialState(p, baseKeys.length, baseKeys, "encryption");
+    state = runAllRounds(state);
+    const validC = [...state.L, ...state.R] as Bit[];
+    const isAccidentallyValid = c.every((b, idx) => b === validC[idx]);
+    
+    if (!isAccidentallyValid) {
+      const key = getSampleKey(p, c, 0);
+      if (!seen.has(key)) {
+        seen.add(key);
+        dataset.push({
+          plaintext: p,
+          ciphertext: c,
+          label: 0,
+        });
+        noiseCount++;
+      }
+    }
   }
 
   return dataset;
@@ -304,3 +350,39 @@ export function datasetToCSV(dataset: DatasetRow[]): string {
 export const DEFAULT_PLAINTEXT: Bit[] = [1, 1, 0, 0, 1, 0, 1, 0];
 export const DEFAULT_KEYS = [3, 5, 7, 9];
 export const DEFAULT_ROUNDS = 4;
+
+export interface ChaosDatasetRow {
+  plaintext: number;
+  ciphertext: number;
+}
+
+export function generateChaosDataset(
+  numSamples: number = 1000,
+  baseKeys: number[] = [3, 5, 7, 9]
+): ChaosDatasetRow[] {
+  const dataset: ChaosDatasetRow[] = [];
+  const maxVal = 255; // 8-bit
+
+  for (let i = 0; i < numSamples; i++) {
+    const pVal = Math.floor(Math.random() * (maxVal + 1));
+    const pBits = intToBits(pVal, 8);
+    
+    // To get unique mappings beyond 256, we vary the keys per sample
+    // The model DOES NOT see these keys, so it must try to find a key-independent pattern.
+    let currentKeys = baseKeys;
+    if (i >= 256 || numSamples > 256) {
+      currentKeys = baseKeys.map(() => Math.floor(Math.random() * 16));
+    }
+
+    let state = createInitialState(pBits, currentKeys.length, currentKeys, "encryption");
+    state = runAllRounds(state);
+    const cVal = bitsToInt([...state.L, ...state.R] as Bit[]);
+    
+    dataset.push({
+      plaintext: pVal,
+      ciphertext: cVal
+    });
+  }
+
+  return dataset;
+}

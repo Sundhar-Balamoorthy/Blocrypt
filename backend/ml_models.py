@@ -6,10 +6,14 @@ Using optimized scikit-learn implementations
 import numpy as np
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.neural_network import MLPClassifier, MLPRegressor
+from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, f1_score, confusion_matrix,
+    mean_squared_error, mean_absolute_error, r2_score
+)
 from typing import List, Tuple, Dict, Optional
 
 scaler = StandardScaler()
@@ -225,3 +229,64 @@ def evaluate_model(y_true: np.ndarray, y_pred: np.ndarray) -> Dict:
             "fn": int(fn)
         }
     }
+
+
+def train_regression_rf(X_train: np.ndarray, y_train: np.ndarray) -> RandomForestRegressor:
+    """Train Random Forest Regressor."""
+    model = RandomForestRegressor(
+        n_estimators=100,
+        max_depth=15,
+        random_state=42
+    )
+    model.fit(X_train, y_train)
+    return model
+
+
+def train_regression_mlp(X_train: np.ndarray, y_train: np.ndarray) -> MLPRegressor:
+    """Train MLP Regressor."""
+    # MLP with early_stopping needs a minimum amount of data for the validation split.
+    # If the dataset is too small, we disable early_stopping to prevent errors.
+    use_early_stopping = len(X_train) >= 20
+    
+    model = MLPRegressor(
+        hidden_layer_sizes=(100, 50),
+        activation='relu',
+        solver='adam',
+        max_iter=2000,
+        random_state=42,
+        early_stopping=use_early_stopping,
+        validation_fraction=0.1 if use_early_stopping else 0.0
+    )
+    model.fit(X_train, y_train)
+    return model
+
+
+def train_regression_svr(X_train: np.ndarray, y_train: np.ndarray) -> SVR:
+    """Train Support Vector Regressor (SVR)."""
+    # Using RBF kernel which is excellent for non-linear high-dimensional data
+    model = SVR(kernel='rbf', C=100.0, epsilon=0.1)
+    model.fit(X_train, y_train)
+    return model
+
+
+def evaluate_regression(y_true: np.ndarray, y_pred: np.ndarray) -> Dict:
+    """Compute regression metrics."""
+    mse = mean_squared_error(y_true, y_pred)
+    mae = mean_absolute_error(y_true, y_pred)
+    r2 = r2_score(y_true, y_pred)
+    
+    return {
+        "mse": float(mse),
+        "mae": float(mae),
+        "r2": float(r2)
+    }
+
+
+def train_cipher_identifier(X_train: np.ndarray, y_train: np.ndarray) -> RandomForestClassifier:
+    """
+    Train a classifier to identify the algorithm (0: Feistel, 1: S-DES, 2: PRESENT).
+    This uses the same statistical features extracted from (P, C) pairs.
+    """
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model.fit(X_train, y_train)
+    return model

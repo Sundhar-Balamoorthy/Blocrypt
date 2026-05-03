@@ -308,21 +308,51 @@ export function generatePRESENTDataset(
   totalRounds: number = 4
 ): PRESENTDatasetRow[] {
   const dataset: PRESENTDatasetRow[] = [];
+  const seen = new Set<string>();
   const halfSamples = Math.floor(numSamples / 2);
   const key80 = DEFAULT_PRESENT_KEY80;
 
-  for (let i = 0; i < halfSamples; i++) {
+  const getSampleKey = (p: Bit[], c: Bit[], l: number) => 
+    `${p.join("")}|${c.join("")}|${l}`;
+
+  // Valid ciphertext samples (label = 1)
+  let validCount = 0;
+  let attempts = 0;
+  const maxAttempts = numSamples * 5; // Low multiplier for large 64-bit space
+
+  while (validCount < halfSamples && attempts < maxAttempts) {
+    attempts++;
     const p = randomBits(64) as Bit[];
     const { ciphertext } = presentEncrypt(p, key80, totalRounds);
-    dataset.push({ plaintext: p, ciphertext, label: 1 });
+    const key = getSampleKey(p, ciphertext, 1);
+    
+    if (!seen.has(key)) {
+      seen.add(key);
+      dataset.push({ plaintext: p, ciphertext, label: 1 });
+      validCount++;
+    }
   }
 
-  for (let i = 0; i < numSamples - halfSamples; i++) {
-    dataset.push({
-      plaintext: randomBits(64) as Bit[],
-      ciphertext: randomBits(64) as Bit[],
-      label: 0,
-    });
+  // Random noise samples (label = 0)
+  let noiseCount = 0;
+  const noiseTarget = numSamples - halfSamples;
+  while (noiseCount < noiseTarget && attempts < maxAttempts * 2) {
+    attempts++;
+    const p = randomBits(64) as Bit[];
+    const c = randomBits(64) as Bit[];
+    
+    // Security check (unlikely in 64-bit space but good for consistency)
+    const { ciphertext: validC } = presentEncrypt(p, key80, totalRounds);
+    const isAccidentallyValid = c.every((b, idx) => b === validC[idx]);
+    
+    if (!isAccidentallyValid) {
+      const key = getSampleKey(p, c, 0);
+      if (!seen.has(key)) {
+        seen.add(key);
+        dataset.push({ plaintext: p, ciphertext: c, label: 0 });
+        noiseCount++;
+      }
+    }
   }
 
   return dataset;
@@ -357,3 +387,27 @@ export const DEFAULT_PRESENT_KEY80: Bit[] = [
 export const DEFAULT_PRESENT_ROUNDS = 4;
 export const MIN_PRESENT_ROUNDS = 1;
 export const MAX_PRESENT_ROUNDS = 8;
+
+export function generateChaosDataset(
+  numSamples: number = 1000,
+  key80: Bit[] = DEFAULT_PRESENT_KEY80,
+  totalRounds: number = 4
+): { plaintext: number; ciphertext: number }[] {
+  const dataset: { plaintext: number; ciphertext: number }[] = [];
+  
+  for (let i = 0; i < numSamples; i++) {
+    const pBits = randomBits(64) as Bit[];
+    const { ciphertext } = presentEncrypt(pBits, key80, totalRounds);
+    
+    // Convert to number (will lose precision beyond 53 bits, but okay for visualization)
+    const pVal = Number(bitsToBigint(pBits));
+    const cVal = Number(bitsToBigint(ciphertext));
+    
+    dataset.push({
+      plaintext: pVal,
+      ciphertext: cVal
+    });
+  }
+
+  return dataset;
+}

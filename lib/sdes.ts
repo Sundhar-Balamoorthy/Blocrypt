@@ -384,23 +384,58 @@ function randomBits(n: number): Bit[] {
 
 export function generateSDESDataset(numSamples: number = 1000): SDESDatasetRow[] {
   const dataset: SDESDatasetRow[] = [];
+  const seen = new Set<string>();
   const halfSamples = Math.floor(numSamples / 2);
-  const key10: Bit[] = [1, 0, 1, 0, 0, 0, 0, 0, 1, 0];
+  const baseKey10: Bit[] = [1, 0, 1, 0, 0, 0, 0, 0, 1, 0];
+
+  const getSampleKey = (p: Bit[], c: Bit[], l: number) => 
+    `${p.join("")}|${c.join("")}|${l}`;
 
   // Valid ciphertext samples (label = 1)
-  for (let i = 0; i < halfSamples; i++) {
+  let validCount = 0;
+  let attempts = 0;
+  const maxAttempts = numSamples * 50;
+
+  while (validCount < halfSamples && attempts < maxAttempts) {
+    attempts++;
     const p = randomBits(8) as Bit[];
-    const { ciphertext } = sdesEncrypt(p, key10);
-    dataset.push({ plaintext: p, ciphertext, label: 1 });
+    
+    // Vary key if we exceed unique plaintext space
+    let currentKey = baseKey10;
+    if (validCount >= 256) {
+      currentKey = randomBits(10) as Bit[];
+    }
+    
+    const { ciphertext } = sdesEncrypt(p, currentKey);
+    const key = getSampleKey(p, ciphertext, 1);
+    
+    if (!seen.has(key)) {
+      seen.add(key);
+      dataset.push({ plaintext: p, ciphertext, label: 1 });
+      validCount++;
+    }
   }
 
   // Random noise samples (label = 0)
-  for (let i = 0; i < numSamples - halfSamples; i++) {
-    dataset.push({
-      plaintext: randomBits(8) as Bit[],
-      ciphertext: randomBits(8) as Bit[],
-      label: 0,
-    });
+  let noiseCount = 0;
+  const noiseTarget = numSamples - halfSamples;
+  while (noiseCount < noiseTarget && attempts < maxAttempts * 2) {
+    attempts++;
+    const p = randomBits(8) as Bit[];
+    const c = randomBits(8) as Bit[];
+    
+    // Security check
+    const { ciphertext: validC } = sdesEncrypt(p, baseKey10);
+    const isAccidentallyValid = c.every((b, idx) => b === validC[idx]);
+    
+    if (!isAccidentallyValid) {
+      const key = getSampleKey(p, c, 0);
+      if (!seen.has(key)) {
+        seen.add(key);
+        dataset.push({ plaintext: p, ciphertext: c, label: 0 });
+        noiseCount++;
+      }
+    }
   }
 
   return dataset;
@@ -410,3 +445,32 @@ export function generateSDESDataset(numSamples: number = 1000): SDESDatasetRow[]
 
 export const DEFAULT_SDES_PLAINTEXT: Bit[] = [1, 0, 1, 1, 0, 1, 0, 0];
 export const DEFAULT_SDES_KEY10: Bit[] = [1, 0, 1, 0, 0, 0, 0, 0, 1, 0];
+
+export function generateChaosDataset(
+  numSamples: number = 1000,
+  baseKey10: Bit[] = [1, 0, 1, 0, 0, 0, 0, 0, 1, 0]
+): { plaintext: number; ciphertext: number }[] {
+  const dataset: { plaintext: number; ciphertext: number }[] = [];
+  const maxVal = 255;
+
+  for (let i = 0; i < numSamples; i++) {
+    const pVal = Math.floor(Math.random() * (maxVal + 1));
+    const pBits = pVal.toString(2).padStart(8, '0').split('').map(b => parseInt(b) as Bit);
+    
+    // Vary key for large datasets to ensure variety
+    let currentKey = baseKey10;
+    if (i >= 256 || numSamples > 256) {
+      currentKey = Array.from({ length: 10 }, () => (Math.random() > 0.5 ? 1 : 0) as Bit);
+    }
+
+    const { ciphertext } = sdesEncrypt(pBits, currentKey);
+    const cVal = parseInt(ciphertext.join(''), 2);
+    
+    dataset.push({
+      plaintext: pVal,
+      ciphertext: cVal
+    });
+  }
+
+  return dataset;
+}

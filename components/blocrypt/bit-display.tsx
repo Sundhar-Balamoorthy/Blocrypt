@@ -43,15 +43,15 @@ export function BitDisplay({
 }: BitDisplayProps) {
   return (
     <div className={cn("flex items-center gap-3", className)}>
-      <span
+      <span 
         className={cn(
-          "w-20 text-right text-[10px] leading-tight font-mono font-semibold shrink-0 break-words",
+          "w-24 text-right text-[10px] font-black uppercase tracking-tighter shrink-0",
           variantLabelColors[variant]
         )}
       >
         {label}
       </span>
-      <div className="flex gap-1">
+      <div className="flex gap-1.5 min-w-fit">
         {bits.map((bit, i) => {
           const isHighlighted = highlight?.[i];
           return (
@@ -60,7 +60,7 @@ export function BitDisplay({
               disabled={!clickable}
               onClick={() => clickable && onBitClick?.(i)}
               className={cn(
-                "w-9 h-9 shrink-0 flex items-center justify-center rounded font-mono text-sm font-bold transition-all duration-200",
+                "w-11 h-11 shrink-0 flex items-center justify-center rounded-lg font-mono text-lg font-black transition-all duration-300",
                 bit === 1
                   ? cn(variantColors[variant], "text-foreground")
                   : "bg-[var(--bit-0)] text-muted-foreground",
