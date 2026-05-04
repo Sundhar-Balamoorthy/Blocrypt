@@ -46,7 +46,7 @@ import { PresentRoundDetailView } from "@/components/blocrypt/present-round-deta
 import { PresentSchematic } from "@/components/blocrypt/present-schematic";
 import { PresentSchematicAnim } from "@/components/blocrypt/present-schematic-anim";
 import { PresentFullCycle } from "@/components/blocrypt/present-full-cycle";
-import { Lock, Unlock, ShieldCheck, Cpu, Grid3X3, GraduationCap, Activity } from "lucide-react";
+import { Lock, Unlock, CheckCircle, ShieldCheck, Cpu, Grid3X3, GraduationCap, Activity } from "lucide-react";
 import { WorksheetView } from "@/components/blocrypt/worksheet-view";
 import { ChaosAnalysisView } from "@/components/blocrypt/chaos-analysis-view";
 import { CipherHub } from "@/components/blocrypt/cipher-hub";
@@ -268,7 +268,7 @@ export default function HomePage() {
                     : "text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
               >
-                <ShieldCheck className="h-4 w-4" />
+                <CheckCircle className="h-4 w-4" />
                 Feistel
               </button>
               <button
@@ -495,7 +495,7 @@ export default function HomePage() {
                     Generates a labeled dataset with valid Feistel ciphertexts (label=1) and random noise (label=0) for ML analysis.
                   </p>
                 </div>
-                <DatasetGenerator keys={feistelKeys} />
+                <DatasetGenerator keys={feistelKeys} rounds={configuredRounds} />
               </div>
             </TabsContent>
 
@@ -844,7 +844,7 @@ export default function HomePage() {
                     Generates a labeled dataset with valid PRESENT ciphertexts (label=1) and random noise (label=0) for ML analysis.
                   </p>
                 </div>
-                <DatasetGenerator cipher="present" />
+                <DatasetGenerator cipher="present" rounds={presentRounds} />
               </div>
             </TabsContent>
 

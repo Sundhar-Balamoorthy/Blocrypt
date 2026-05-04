@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Blocrypt - Feistel Cipher Simulator',
-  description: 'Interactive educational Feistel cipher simulator with step-through rounds, schematic diagrams, encryption/decryption verification, and dataset generation.',
+  title: 'Blocrypt - Block-Cipher Cryptanalysis Tool',
+  description: 'Interactive educational block-cipher cryptanalysis tool with step-through rounds, schematic diagrams, encryption/decryption verification, and dataset generation.',
   generator: 'v0.app',
 
 }

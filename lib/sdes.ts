@@ -376,6 +376,7 @@ export interface SDESDatasetRow {
   plaintext: Bit[];
   ciphertext: Bit[];
   label: 0 | 1;
+  rounds?: number;
 }
 
 function randomBits(n: number): Bit[] {
@@ -411,7 +412,7 @@ export function generateSDESDataset(numSamples: number = 1000): SDESDatasetRow[]
     
     if (!seen.has(key)) {
       seen.add(key);
-      dataset.push({ plaintext: p, ciphertext, label: 1 });
+      dataset.push({ plaintext: p, ciphertext, label: 1, rounds: 2 });
       validCount++;
     }
   }
@@ -432,7 +433,7 @@ export function generateSDESDataset(numSamples: number = 1000): SDESDatasetRow[]
       const key = getSampleKey(p, c, 0);
       if (!seen.has(key)) {
         seen.add(key);
-        dataset.push({ plaintext: p, ciphertext: c, label: 0 });
+        dataset.push({ plaintext: p, ciphertext: c, label: 0, rounds: 2 });
         noiseCount++;
       }
     }

@@ -72,11 +72,11 @@ function PresentNibbleRow({
         <span className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] font-black">{label}</span>
         <div className="h-px flex-1 bg-white/10" />
       </div>
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(600px,1fr))] gap-6 w-full">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(720px,1fr))] gap-6 w-full">
         {Array.from({ length: numChunks }, (_, n) => (
-          <div key={n} className="flex flex-col gap-2 p-4 rounded-2xl bg-black/40 border border-white/10 shadow-inner min-w-[580px]">
+          <div key={n} className="flex flex-col gap-2 min-w-[700px]">
             <div className="flex justify-between items-center px-1">
-               <span className="text-[9px] font-mono text-white/20 uppercase">Bits {n * 16}-{n * 16 + 15}</span>
+               <span className="text-[9px] font-mono text-white/40 uppercase">Bits {n * 16}-{n * 16 + 15}</span>
             </div>
             <div className="flex gap-4 items-center">
               <div className="flex gap-1.5">
@@ -84,19 +84,19 @@ function PresentNibbleRow({
                   <PresentBit key={j} bit={bit} variant={variant} onClick={onBitClick ? () => onBitClick(n * 16 + j) : undefined} size="sm" />
                 ))}
               </div>
-              <div className="w-px h-6 bg-white/10" />
+              <div className="w-px h-8 bg-white/10" />
               <div className="flex gap-1.5">
                 {bits.slice(n * 16 + 4, n * 16 + 8).map((bit, j) => (
                   <PresentBit key={j} bit={bit} variant={variant} onClick={onBitClick ? () => onBitClick(n * 16 + 4 + j) : undefined} size="sm" />
                 ))}
               </div>
-              <div className="w-px h-8 bg-white/30" />
+              <div className="w-px h-8 bg-white/10" />
               <div className="flex gap-1.5">
                 {bits.slice(n * 16 + 8, n * 16 + 12).map((bit, j) => (
                   <PresentBit key={j} bit={bit} variant={variant} onClick={onBitClick ? () => onBitClick(n * 16 + 8 + j) : undefined} size="sm" />
                 ))}
               </div>
-              <div className="w-px h-6 bg-white/10" />
+              <div className="w-px h-8 bg-white/10" />
               <div className="flex gap-1.5">
                 {bits.slice(n * 16 + 12, n * 16 + 16).map((bit, j) => (
                   <PresentBit key={j} bit={bit} variant={variant} onClick={onBitClick ? () => onBitClick(n * 16 + 12 + j) : undefined} size="sm" />
@@ -246,7 +246,7 @@ export function PresentFullCycle() {
             
             <div className="text-center space-y-4 mb-8">
                <h3 className="text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-rose-400 to-amber-400 pb-2">Execution Trace</h3>
-               <p className="text-muted-foreground font-mono text-sm uppercase tracking-[0.4em] opacity-40">Interactive Bit-Level Analysis</p>
+               <p className="text-3xl-foreground font-mono text-sm uppercase tracking-[0.4em] opacity-80">Interactive Bit-Level Analysis</p>
             </div>
 
             {/* --- INITIAL STATE --- */}
@@ -254,7 +254,7 @@ export function PresentFullCycle() {
                <div className="min-w-max space-y-8">
                  <div className="flex items-center gap-2">
                     <Play className="w-4 h-4 text-purple-500" />
-                    <span className="text-[10px] font-mono text-purple-400 uppercase tracking-widest font-black">Plaintext Ingestion</span>
+                    <span className="text-[20px] font-mono text-purple-400 uppercase tracking-widest font-black">Plaintext Ingestion</span>
                  </div>
                  <PresentNibbleRow bits={result.plaintext} label="Input State" variant="state" />
                </div>
@@ -277,7 +277,7 @@ export function PresentFullCycle() {
                          <div className="p-8 rounded-3xl bg-rose-500/[0.03] border border-rose-500/10 space-y-4">
                             <div className="flex items-center gap-2 text-rose-400">
                                <Layers className="w-3 h-3" />
-                               <span className="text-[10px] font-black uppercase tracking-widest">ARK: AddRoundKey</span>
+                               <span className="text-[20px] font-black uppercase tracking-widest">ARK: AddRoundKey</span>
                             </div>
                             <PresentNibbleRow bits={r.afterSBox} label="Key XOR Done" variant="key" />
                          </div>
@@ -285,7 +285,7 @@ export function PresentFullCycle() {
                          <div className="p-8 rounded-3xl bg-amber-500/[0.03] border border-amber-500/10 space-y-4">
                             <div className="flex items-center gap-2 text-amber-400">
                                <Box className="w-3 h-3" />
-                               <span className="text-[10px] font-black uppercase tracking-widest">S: S-Box Layer</span>
+                               <span className="text-[20px] font-black uppercase tracking-widest">S: S-Box Layer</span>
                             </div>
                             <PresentNibbleRow bits={r.afterSBox} label="Substitution" variant="sbox" />
                          </div>
@@ -293,7 +293,7 @@ export function PresentFullCycle() {
                          <div className="p-8 rounded-3xl bg-cyan-500/[0.03] border border-cyan-500/10 space-y-4">
                             <div className="flex items-center gap-2 text-cyan-400">
                                <Grid3X3 className="w-3 h-3" />
-                               <span className="text-[10px] font-black uppercase tracking-widest">P: P-Layer (Permutation)</span>
+                               <span className="text-[20px] font-black uppercase tracking-widest">P: P-Layer (Permutation)</span>
                             </div>
                             <PresentNibbleRow bits={r.afterPLayer} label="Permutation" variant="player" />
                          </div>
@@ -325,8 +325,8 @@ export function PresentFullCycle() {
             </div>
 
             {/* --- CIPHERTEXT --- */}
-            <div className="w-full max-w-[1200px] p-16 rounded-[80px] bg-gradient-to-b from-amber-500/10 to-transparent">
-                <div className="min-w-max flex flex-col items-center gap-8 px-10">
+            <div className="w-full p-16">
+                <div className="flex flex-col items-center gap-8 px-10">
                   <Zap className="w-12 h-12 text-amber-500 animate-pulse" />
                   <h4 className="text-3xl font-black text-amber-500 tracking-[0.3em] uppercase">Ciphertext Result</h4>
                   <PresentNibbleRow bits={result.ciphertext} label="Encrypted Output" variant="sbox" />
@@ -334,10 +334,8 @@ export function PresentFullCycle() {
             </div>
 
             {/* Verification Block */}
-            <div className={`w-full max-w-[1400px] p-14 rounded-[64px] transition-all duration-700 ${
-              result.success ? "bg-emerald-500/[0.05] text-emerald-400" : "bg-destructive/[0.05] text-destructive"
-            }`}>
-              <div className="min-w-max space-y-8 px-6">
+            <div className="w-full p-14 transition-all duration-700">
+              <div className="space-y-8 px-6">
                 <div className="flex items-center justify-between gap-8">
                    <div className="flex items-center gap-6">
                       {result.success ? <CheckCircle2 className="w-16 h-16" /> : <XCircle className="w-16 h-16" />}
@@ -346,7 +344,7 @@ export function PresentFullCycle() {
                          <p className="text-sm font-mono opacity-60">Verified round-trip through Inverse S-Box & Inverse P-Layer</p>
                       </div>
                    </div>
-                   <Badge variant="outline" className="h-12 px-6 text-lg font-black font-mono border-current opacity-30">
+                   <Badge className={`h-12 px-6 text-lg font-black font-mono border ${result.success ? "border-emerald-400 bg-emerald-500/10 text-emerald-300" : "border-destructive text-destructive bg-destructive/10"}`}>
                       S:{result.success ? "PASS" : "FAIL"}
                    </Badge>
                 </div>

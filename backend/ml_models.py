@@ -10,6 +10,7 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.svm import SVR
 from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score, confusion_matrix,
     mean_squared_error, mean_absolute_error, r2_score
@@ -208,6 +209,53 @@ def train_mlp(X_train: np.ndarray, y_train: np.ndarray) -> MLPClassifier:
     return model
 
 
+def sample_confidence(model, X: np.ndarray) -> List[float]:
+    """Return the model's confidence score for each sample."""
+    if hasattr(model, "predict_proba"):
+        probs = model.predict_proba(X)
+        return np.max(probs, axis=1).astype(float).tolist()
+
+    if hasattr(model, "decision_function"):
+        scores = model.decision_function(X)
+        if scores.ndim == 1:
+            probs = 1 / (1 + np.exp(-scores))
+            return np.maximum(probs, 1 - probs).astype(float).tolist()
+
+        exp = np.exp(scores - np.max(scores, axis=1, keepdims=True))
+        probs = exp / np.sum(exp, axis=1, keepdims=True)
+        return np.max(probs, axis=1).astype(float).tolist()
+
+    return [1.0 for _ in range(len(X))]
+
+
+def compute_round_metrics(
+    y_true: np.ndarray,
+    y_pred: np.ndarray,
+    rounds: np.ndarray,
+    confidences: Optional[np.ndarray] = None
+) -> List[Dict]:
+    """Compute evaluation metrics grouped by cipher round count."""
+    metrics_by_round = []
+    for round_value in np.unique(rounds):
+        mask = rounds == round_value
+        if np.sum(mask) == 0:
+            continue
+
+        group_metrics = evaluate_model(y_true[mask], y_pred[mask])
+        metrics_by_round.append({
+            "rounds": int(round_value),
+            "accuracy": float(group_metrics["accuracy"]),
+            "precision": float(group_metrics["precision"]),
+            "recall": float(group_metrics["recall"]),
+            "f1": float(group_metrics["f1"]),
+            "test_samples": int(np.sum(mask)),
+            "avg_confidence": float(np.mean(confidences[mask])) if confidences is not None else 0.0
+        })
+
+    metrics_by_round.sort(key=lambda item: item["rounds"])
+    return metrics_by_round
+
+
 def evaluate_model(y_true: np.ndarray, y_pred: np.ndarray) -> Dict:
     """Compute comprehensive evaluation metrics."""
     tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
@@ -248,14 +296,17 @@ def train_regression_mlp(X_train: np.ndarray, y_train: np.ndarray) -> MLPRegress
     # If the dataset is too small, we disable early_stopping to prevent errors.
     use_early_stopping = len(X_train) >= 20
     
-    model = MLPRegressor(
-        hidden_layer_sizes=(100, 50),
-        activation='relu',
-        solver='adam',
-        max_iter=2000,
-        random_state=42,
-        early_stopping=use_early_stopping,
-        validation_fraction=0.1 if use_early_stopping else 0.0
+    model = make_pipeline(
+        StandardScaler(),
+        MLPRegressor(
+            hidden_layer_sizes=(100, 50),
+            activation='relu',
+            solver='adam',
+            max_iter=2000,
+            random_state=42,
+            early_stopping=use_early_stopping,
+            validation_fraction=0.1 if use_early_stopping else 0.0
+        )
     )
     model.fit(X_train, y_train)
     return model
@@ -263,8 +314,11 @@ def train_regression_mlp(X_train: np.ndarray, y_train: np.ndarray) -> MLPRegress
 
 def train_regression_svr(X_train: np.ndarray, y_train: np.ndarray) -> SVR:
     """Train Support Vector Regressor (SVR)."""
-    # Using RBF kernel which is excellent for non-linear high-dimensional data
-    model = SVR(kernel='rbf', C=100.0, epsilon=0.1)
+    # Scale inputs; SVR is sensitive to input feature ranges.
+    model = make_pipeline(
+        StandardScaler(),
+        SVR(kernel='rbf', C=100.0, epsilon=0.1)
+    )
     model.fit(X_train, y_train)
     return model
 

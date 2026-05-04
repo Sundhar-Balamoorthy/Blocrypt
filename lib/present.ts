@@ -297,10 +297,21 @@ export interface PRESENTDatasetRow {
   plaintext: Bit[];
   ciphertext: Bit[];
   label: 0 | 1;
+  rounds?: number;
 }
 
 function randomBits(n: number): Bit[] {
   return Array.from({ length: n }, () => (Math.random() > 0.5 ? 1 : 0) as Bit);
+}
+
+function chooseDatasetRounds(
+  preferredRounds: number = 4,
+  minRounds = 4,
+  maxRounds = 8
+): number {
+  const lowerBound = Math.max(minRounds, preferredRounds - 2);
+  const upperBound = Math.min(maxRounds, preferredRounds + 2);
+  return Math.floor(Math.random() * (upperBound - lowerBound + 1)) + lowerBound;
 }
 
 export function generatePRESENTDataset(
@@ -323,12 +334,13 @@ export function generatePRESENTDataset(
   while (validCount < halfSamples && attempts < maxAttempts) {
     attempts++;
     const p = randomBits(64) as Bit[];
-    const { ciphertext } = presentEncrypt(p, key80, totalRounds);
+    const sampleRounds = chooseDatasetRounds(totalRounds);
+    const { ciphertext } = presentEncrypt(p, key80, sampleRounds);
     const key = getSampleKey(p, ciphertext, 1);
     
     if (!seen.has(key)) {
       seen.add(key);
-      dataset.push({ plaintext: p, ciphertext, label: 1 });
+      dataset.push({ plaintext: p, ciphertext, label: 1, rounds: sampleRounds });
       validCount++;
     }
   }
@@ -340,16 +352,17 @@ export function generatePRESENTDataset(
     attempts++;
     const p = randomBits(64) as Bit[];
     const c = randomBits(64) as Bit[];
+    const noiseRounds = chooseDatasetRounds(totalRounds);
     
     // Security check (unlikely in 64-bit space but good for consistency)
-    const { ciphertext: validC } = presentEncrypt(p, key80, totalRounds);
+    const { ciphertext: validC } = presentEncrypt(p, key80, noiseRounds);
     const isAccidentallyValid = c.every((b, idx) => b === validC[idx]);
     
     if (!isAccidentallyValid) {
       const key = getSampleKey(p, c, 0);
       if (!seen.has(key)) {
         seen.add(key);
-        dataset.push({ plaintext: p, ciphertext: c, label: 0 });
+        dataset.push({ plaintext: p, ciphertext: c, label: 0, rounds: noiseRounds });
         noiseCount++;
       }
     }

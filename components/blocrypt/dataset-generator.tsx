@@ -24,9 +24,10 @@ type AnyDatasetRow = DatasetRow | SDESDatasetRow | PRESENTDatasetRow;
 interface DatasetGeneratorProps {
   cipher?: "feistel" | "sdes" | "present";
   keys?: number[];
+  rounds?: number;
 }
 
-export function DatasetGenerator({ cipher = "feistel", keys }: DatasetGeneratorProps) {
+export function DatasetGenerator({ cipher = "feistel", keys, rounds }: DatasetGeneratorProps) {
   const [numSamples, setNumSamples] = useState(1000);
   const [dataset, setDataset] = useState<AnyDatasetRow[] | null>(null);
   const [generating, setGenerating] = useState(false);
@@ -38,12 +39,12 @@ export function DatasetGenerator({ cipher = "feistel", keys }: DatasetGeneratorP
       const data = cipher === "sdes"
         ? generateSDESDataset(numSamples)
         : cipher === "present"
-          ? generatePRESENTDataset(numSamples)
+          ? generatePRESENTDataset(numSamples, rounds)
           : generateDataset(numSamples, keys);
       setDataset(data);
       setGenerating(false);
     }, 50);
-  }, [numSamples, keys, cipher]);
+  }, [numSamples, keys, cipher, rounds]);
 
   const handleDownload = useCallback(() => {
     if (!dataset) return;
@@ -150,6 +151,11 @@ export function DatasetGenerator({ cipher = "feistel", keys }: DatasetGeneratorP
                         C{i}
                       </TableHead>
                     ))}
+                    {preview[0]?.rounds !== undefined && (
+                      <TableHead className="font-mono text-[10px] py-2 px-2 text-center bg-[#334155]">
+                        Rounds
+                      </TableHead>
+                    )}
                     <TableHead className="font-mono text-[10px] py-2 px-2 text-center sticky right-0 bg-[#334155]">
                       Label
                     </TableHead>
@@ -177,6 +183,11 @@ export function DatasetGenerator({ cipher = "feistel", keys }: DatasetGeneratorP
                           {bit}
                         </TableCell>
                       ))}
+                      {row.rounds !== undefined && (
+                        <TableCell className="font-mono text-[10px] py-1.5 px-2 text-center text-foreground">
+                          {row.rounds}
+                        </TableCell>
+                      )}
                       <TableCell
                         className={`font-mono text-[10px] py-1.5 px-2 text-center font-bold sticky right-0 bg-card ${
                           row.label === 1

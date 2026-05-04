@@ -104,7 +104,7 @@ export function generateFeistelChallenge(difficulty: "easy" | "medium" | "hard")
       },
       { 
         label: "Step 4: Swap and Combine", 
-        details: "In a Feistel cipher, the new Left half (L1) is simply the old Right half (R0), and the new Right half (R1) is the result of our XOR calculation. Result: [L1 ‖ R1].", 
+        details: "In a Feistel cipher, the new Left half (L1) is simply the old Right half (R0), and the new Right half (R1) is the result of our XOR calculation. Result: [L1 || R1].", 
         bits: answer 
       }
     ];

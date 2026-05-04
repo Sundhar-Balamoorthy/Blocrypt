@@ -243,15 +243,36 @@ export interface DatasetRow {
   plaintext: Bit[];
   ciphertext: Bit[];
   label: 0 | 1;
+  rounds?: number;
 }
 
 function randomBits(n: number): Bit[] {
   return Array.from({ length: n }, () => (Math.random() > 0.5 ? 1 : 0) as Bit);
 }
 
+function chooseDatasetRounds(
+  preferredRounds?: number,
+  minRounds = 2,
+  maxRounds = 8
+): number {
+  if (preferredRounds && preferredRounds > 0) {
+    const lowerBound = Math.max(minRounds, preferredRounds - 2);
+    const upperBound = Math.min(maxRounds, preferredRounds + 2);
+    return Math.floor(Math.random() * (upperBound - lowerBound + 1)) + lowerBound;
+  }
+  return Math.floor(Math.random() * (maxRounds - minRounds + 1)) + minRounds;
+}
+
+function generateRoundKeys(rounds: number, baseKeys: number[]): number[] {
+  return Array.from({ length: rounds }, (_, idx) =>
+    baseKeys[idx % baseKeys.length] ?? Math.floor(Math.random() * 16)
+  );
+}
+
 export function generateDataset(
   numSamples: number = 1000,
-  baseKeys: number[] = [3, 5, 7, 9]
+  baseKeys: number[] = [3, 5, 7, 9],
+  preferredRounds?: number
 ): DatasetRow[] {
   const dataset: DatasetRow[] = [];
   const seen = new Set<string>();
@@ -269,17 +290,10 @@ export function generateDataset(
   while (validCount < halfSamples && attempts < maxAttempts) {
     attempts++;
     const p = randomBits(8);
-    
-    // If we need more unique samples than the 8-bit space allows (256), 
-    // we vary the keys per sample to ensure variety.
-    let currentKeys = baseKeys;
-    if (validCount >= 256) {
-      // Use random keys for each sample to maximize the (P, C) mapping space.
-      // This allows for up to 65,536 unique (P, C) pairs.
-      currentKeys = baseKeys.map(() => Math.floor(Math.random() * 16));
-    }
-      
-    let state = createInitialState(p, currentKeys.length, currentKeys, "encryption");
+    const currentRounds = chooseDatasetRounds(preferredRounds ?? baseKeys.length);
+    const currentKeys = generateRoundKeys(currentRounds, baseKeys);
+
+    let state = createInitialState(p, currentRounds, currentKeys, "encryption");
     state = runAllRounds(state);
     const c = [...state.L, ...state.R] as Bit[];
     
@@ -290,6 +304,7 @@ export function generateDataset(
         plaintext: p,
         ciphertext: c,
         label: 1,
+        rounds: currentRounds,
       });
       validCount++;
     }
@@ -302,9 +317,11 @@ export function generateDataset(
     attempts++;
     const p = randomBits(8);
     const c = randomBits(8);
-    
+    const noiseRounds = chooseDatasetRounds(preferredRounds ?? baseKeys.length);
+    const noiseKeys = generateRoundKeys(noiseRounds, baseKeys);
+
     // Security check: Ensure this random noise is NOT accidentally a valid ciphertext
-    let state = createInitialState(p, baseKeys.length, baseKeys, "encryption");
+    let state = createInitialState(p, noiseRounds, noiseKeys, "encryption");
     state = runAllRounds(state);
     const validC = [...state.L, ...state.R] as Bit[];
     const isAccidentallyValid = c.every((b, idx) => b === validC[idx]);
@@ -317,6 +334,7 @@ export function generateDataset(
           plaintext: p,
           ciphertext: c,
           label: 0,
+          rounds: noiseRounds,
         });
         noiseCount++;
       }
@@ -336,11 +354,13 @@ export function datasetToCSV(dataset: DatasetRow[]): string {
     ...Array.from({ length: pLen }, (_, i) => `P${i}`),
     ...Array.from({ length: cLen }, (_, i) => `C${i}`),
     "Label",
-  ].join(",");
+    dataset[0].rounds !== undefined ? "Rounds" : null,
+  ].filter(Boolean).join(",");
 
-  const rows = dataset.map((row) =>
-    [...row.plaintext, ...row.ciphertext, row.label].join(",")
-  );
+  const rows = dataset.map((row) => {
+    const base = [...row.plaintext, ...row.ciphertext, row.label];
+    return row.rounds !== undefined ? [...base, row.rounds].join(",") : base.join(",");
+  });
 
   return [headers, ...rows].join("\n");
 }

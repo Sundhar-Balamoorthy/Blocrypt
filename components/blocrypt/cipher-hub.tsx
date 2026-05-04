@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { 
   Shield, Cpu, Binary, Zap, Info, TrendingUp, 
   Map, Lightbulb, Play, ArrowRight, Target, Brain,
-  Activity, Lock, Search, Database, Grid3X3, Home, ShieldCheck
+  Activity, Lock, Search, Database, Grid3X3, Home, ShieldCheck, CheckCircle
 } from "lucide-react";
 import { 
   Radar, RadarChart, PolarGrid, 
@@ -27,9 +27,9 @@ const COMPARATIVE_METRICS = [
 ];
 
 const MODEL_PERFORMANCE = [
-  { cipher: "Feistel", rf: 98, mlp: 92, svr: 85 },
-  { cipher: "S-DES", rf: 95, mlp: 88, svr: 78 },
-  { cipher: "PRESENT", rf: 65, mlp: 55, svr: 40 },
+  { cipher: "Feistel", rf: 88, mlp: 85, svr: 76 },
+  { cipher: "S-DES", rf: 82, mlp: 78, svr: 70 },
+  { cipher: "PRESENT", rf: 58, mlp: 50, svr: 40 },
 ];
 
 export function CipherHub({ onStartCipher }: { onStartCipher: (cipher: "feistel" | "sdes" | "present") => void }) {
@@ -47,14 +47,14 @@ export function CipherHub({ onStartCipher }: { onStartCipher: (cipher: "feistel"
     {
       title: "Feistel Simulator (8-Bit)",
       description: "Classical block cipher structure. Highlight: Click the 'Feistel' tab at the top to experiment with rounds, subkeys, and L/R swaps.",
-      icon: <Zap className="w-8 h-8 text-blue-500" />,
+      icon: <CheckCircle className="w-8 h-8 text-blue-500" />,
       color: "from-blue-500/20 to-transparent",
       cipher: "feistel"
     },
     {
       title: "S-DES Simulator (8-Bit)",
       description: "Advanced permutation logic. Highlight: Click the 'S-DES' tab to master P10/P8 permutations and S-Box lookups.",
-      icon: <ShieldCheck className="h-8 w-8 text-emerald-500" />,
+      icon: <Cpu className="h-8 w-8 text-emerald-500" />,
       color: "from-emerald-500/20 to-transparent",
       cipher: "sdes"
     },
@@ -247,20 +247,37 @@ export function CipherHub({ onStartCipher }: { onStartCipher: (cipher: "feistel"
       <section className="grid grid-cols-1 gap-8">
         <Card className="bg-card/40 backdrop-blur-md border-primary/10">
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Brain className="w-6 h-6 text-primary" />
-              <CardTitle className="text-2xl font-black tracking-tight">AI Attacker Performance Matrix</CardTitle>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Brain className="w-6 h-6 text-primary" />
+                <CardTitle className="text-2xl font-black tracking-tight">AI Attacker Performance Matrix</CardTitle>
+              </div>
+              <div className="flex gap-2">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                  <span className="text-xs font-bold">Random Forest</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                  <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                  <span className="text-xs font-bold">Neural Net (MLP)</span>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <span className="text-xs font-bold">SVM (SVR)</span>
+                </div>
+              </div>
             </div>
-            <CardDescription className="text-md font-medium leading-relaxed">Evaluating which Machine Learning model is most effective at 'cracking' each algorithm's pattern.</CardDescription>
+            <CardDescription className="text-md font-medium leading-relaxed">Approximate attacker success rates for each model vs. algorithm. Lower values indicate stronger resistance.</CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px] pt-4">
+          <CardContent className="h-[400px] pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={MODEL_PERFORMANCE}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis dataKey="cipher" stroke="#94a3b8" />
                 <YAxis stroke="#94a3b8" unit="%" domain={[0, 100]} />
                 <ChartTooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '12px' }}
+                  contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: '12px', fontSize: '12px' }}
+                  cursor={{ fill: 'rgba(255,255,255,0.02)' }}
                 />
                 <Bar dataKey="rf" name="Random Forest" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="mlp" name="Neural Net (MLP)" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
@@ -273,7 +290,7 @@ export function CipherHub({ onStartCipher }: { onStartCipher: (cipher: "feistel"
               <Info className="w-5 h-5 text-primary" />
             </div>
             <p className="leading-relaxed">
-              <span className="font-bold text-foreground">Analysis:</span> Random Forest consistently performs best for structured bit-level data (Feistel/SDES), while modern SP-Networks like PRESENT successfully resist most shallow learning models.
+              <span className="font-bold text-foreground">Analysis:</span> Random Forest remains strongest on bit-level structured ciphers, while PRESENT shows much stronger resistance to shallow learning approaches.
             </p>
           </div>
         </Card>

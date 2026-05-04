@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, SkipForward, RotateCcw, Zap } from "lucide-react";
+import { SkipForward, RotateCcw, Zap } from "lucide-react";
 
 interface SDESControlsProps {
   step: number;
@@ -21,14 +20,6 @@ const STEP_LABELS = [
   "After f_K (Round 2) + IP⁻¹ — Done ✓",
 ];
 
-// Speed options: label → interval ms
-const SPEED_OPTIONS: { label: string; ms: number }[] = [
-  { label: "0.5×", ms: 90000 },
-  { label: "1×",   ms: 45000 },
-  { label: "2×",   ms: 22500 },
-  { label: "3×",   ms: 11250 },
-];
-
 export function SDESControls({
   step,
   completed,
@@ -37,41 +28,7 @@ export function SDESControls({
   onReset,
   onRunAll,
 }: SDESControlsProps) {
-  const [autoPlaying, setAutoPlaying] = useState(false);
-  const [speedIdx, setSpeedIdx] = useState(1); // default 1×
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Start/stop interval
-  useEffect(() => {
-    if (autoPlaying && !completed) {
-      intervalRef.current = setInterval(() => {
-        onNextStep();
-      }, SPEED_OPTIONS[speedIdx].ms);
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [autoPlaying, speedIdx, onNextStep, completed]);
-
-  // Auto-stop when completed
-  useEffect(() => {
-    if (completed && autoPlaying) {
-      setAutoPlaying(false);
-    }
-  }, [completed, autoPlaying]);
-
-  const handlePlayPause = () => {
-    if (completed) return;
-    setAutoPlaying((prev) => !prev);
-  };
-
   const handleReset = () => {
-    setAutoPlaying(false);
     onReset();
   };
 
@@ -134,31 +91,17 @@ export function SDESControls({
         {/* Next Step */}
         <Button
           onClick={onNextStep}
-          disabled={completed || autoPlaying}
+          disabled={completed}
           className="gap-1.5 w-full"
         >
           <SkipForward className="h-4 w-4" />
           Next Step
         </Button>
 
-        {/* Auto-play / Pause */}
-        <Button
-          variant={autoPlaying ? "destructive" : "secondary"}
-          onClick={handlePlayPause}
-          disabled={completed}
-          className="gap-1.5 w-full"
-        >
-          {autoPlaying ? (
-            <><Pause className="h-4 w-4" /> Pause Auto-play</>
-          ) : (
-            <><Play className="h-4 w-4" /> Auto-play</>
-          )}
-        </Button>
-
         {/* Run All */}
         <Button
           variant="outline"
-          onClick={() => { setAutoPlaying(false); onRunAll(); }}
+          onClick={onRunAll}
           disabled={completed}
           className="gap-1.5 w-full"
         >
@@ -175,28 +118,6 @@ export function SDESControls({
           <RotateCcw className="h-4 w-4" />
           Reset
         </Button>
-      </div>
-
-      {/* ── Speed selector ─────────────────────────────────────────── */}
-      <div className="flex flex-col gap-1.5 pt-1">
-        <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
-          Auto-play Speed
-        </span>
-        <div className="grid grid-cols-4 gap-1">
-          {SPEED_OPTIONS.map((opt, i) => (
-            <button
-              key={opt.label}
-              onClick={() => setSpeedIdx(i)}
-              className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition-colors border ${
-                speedIdx === i
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-secondary text-muted-foreground border-border hover:bg-accent"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   );

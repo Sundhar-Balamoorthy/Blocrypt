@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 import { 
   ScatterChart, Scatter, XAxis, YAxis, ZAxis, 
-  CartesianGrid, Tooltip, ResponsiveContainer, Cell 
+  CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Cell 
 } from "recharts";
 import { 
   Zap, Database, BarChart3, Binary, Activity, 
@@ -23,6 +24,8 @@ interface RegressionResults {
   mae: number;
   r2: number;
   cv_r2: number;
+  cv_mae: number;
+  predictability_score: number;
   test_samples: number;
   train_samples: number;
   model_type: string;
@@ -33,6 +36,7 @@ export function ChaosAnalysisView({ cipher }: { cipher: "feistel" | "sdes" | "pr
   const [dataset, setDataset] = useState<{ plaintext: number; ciphertext: number }[]>([]);
   const [results, setResults] = useState<RegressionResults | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPredicting, setIsPredicting] = useState(false);
   const [activeModel, setActiveModel] = useState<"rf" | "mlp" | "svr">("rf");
   const [predictionInput, setPredictionInput] = useState<string>("");
   const [predictionOutput, setPredictionOutput] = useState<number | null>(null);
@@ -81,6 +85,46 @@ export function ChaosAnalysisView({ cipher }: { cipher: "feistel" | "sdes" | "pr
     }
   };
 
+  const handlePredict = async (val: number) => {
+    let trueC = 0;
+    if (cipher === "feistel") {
+      const bits = intToBits(val, 8);
+      const state = runAllRounds(createInitialState(bits, DEFAULT_KEYS.length, DEFAULT_KEYS));
+      trueC = bitsToInt([...state.L, ...state.R] as Bit[]);
+    } else if (cipher === "sdes") {
+      const bits = val.toString(2).padStart(8, '0').split('').map(b => parseInt(b) as Bit);
+      const state = sdesEncrypt(bits, DEFAULT_SDES_KEY10 as Bit[]);
+      trueC = parseInt(state.ciphertext.join(''), 2);
+    } else {
+      const bits = val.toString(2).padStart(64, '0').split('').slice(-64).map(b => parseInt(b) as Bit);
+      const state = presentEncrypt(bits, DEFAULT_PRESENT_KEY80 as Bit[], 4);
+      trueC = Number(BigInt('0b' + state.ciphertext.join('')));
+    }
+
+    setTrueOutput(trueC);
+    setIsPredicting(true);
+    try {
+      const response = await fetch("http://localhost:8000/api/predict-regression", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dataset,
+          model_type: activeModel,
+          input_plaintext: val
+        }),
+      });
+
+      if (!response.ok) throw new Error("Prediction failed");
+      const data = await response.json();
+      setPredictionOutput(data.prediction);
+    } catch (error) {
+      toast.error("Could not generate model prediction");
+      console.error(error);
+    } finally {
+      setIsPredicting(false);
+    }
+  };
+
   const handleDownload = () => {
     if (dataset.length === 0) return;
     
@@ -121,12 +165,16 @@ export function ChaosAnalysisView({ cipher }: { cipher: "feistel" | "sdes" | "pr
               <div className="flex items-center gap-2">
                 <Target className="w-6 h-6 text-primary" />
                 <CardTitle className="text-2xl font-black tracking-tight">Chaos Parameters</CardTitle>
-                <div className="group relative">
-                  <Info className="w-4 h-4 text-muted-foreground/40 cursor-help" />
-                  <div className="absolute left-0 bottom-full mb-2 w-64 p-3 bg-popover text-[11px] rounded-xl border border-border hidden group-hover:block z-50 leading-relaxed shadow-2xl">
-                    Define the sample size for analysis. More samples provide a more accurate 'Chaos Score' but take longer to process.
-                  </div>
-                </div>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center justify-center rounded-full p-1 cursor-help">
+                      <Info className="w-4 h-4 text-muted-foreground/40" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" sideOffset={4} align="center" className="max-w-xs text-[11px] leading-relaxed">
+                    Define the sample size for analysis. More samples provide a more accurate Predictability Score but take longer to process.
+                  </TooltipContent>
+                </Tooltip>
               </div>
               <CardDescription className="text-md">Configure the scale of analysis for the {cipher.toUpperCase()} cipher.</CardDescription>
             </div>
@@ -211,17 +259,21 @@ export function ChaosAnalysisView({ cipher }: { cipher: "feistel" | "sdes" | "pr
 
             {results && (
               <div className="pt-4 border-t border-primary/10 space-y-4">
-                <div className="flex justify-between items-center group relative cursor-help">
-                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm font-medium text-muted-foreground">Chaos Score (CV)</span>
-                    <Info className="w-3 h-3 text-muted-foreground/50" />
-                   </div>
-                   <Badge variant={results.cv_r2 > 0.5 ? "default" : "secondary"} className="font-mono">
-                    {(results.cv_r2 * 100).toFixed(2)}%
+                <div className="flex justify-between items-center">
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-1.5 cursor-help">
+                        <span className="text-sm font-medium text-muted-foreground">Predictability Score (CV)</span>
+                        <Info className="w-3 h-3 text-muted-foreground/50" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" sideOffset={4} align="center" className="w-56 text-[9px] leading-relaxed">
+                      5-Fold Cross-Validation Predictability Score: normalized mean absolute error. Higher values mean the model predicts better and the cipher is less chaotic.
+                    </TooltipContent>
+                  </Tooltip>
+                  <Badge variant={results.predictability_score > 0.5 ? "default" : "secondary"} className="font-mono">
+                    {(results.predictability_score * 100).toFixed(1)}%
                   </Badge>
-                  <span className="absolute bottom-full left-0 mb-2 w-48 p-2 bg-popover text-[9px] rounded border border-border hidden group-hover:block z-50">
-                    5-Fold Cross-Validation: This is the average prediction accuracy across 5 different blind tests. Higher % means the cipher is LESS chaotic (easier to predict).
-                  </span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 rounded-lg bg-background/40 border border-primary/5 min-w-0">
@@ -280,7 +332,7 @@ export function ChaosAnalysisView({ cipher }: { cipher: "feistel" | "sdes" | "pr
                     tickFormatter={(v) => formatValue(v)}
                     width={80}
                   />
-                  <Tooltip 
+                  <RechartsTooltip 
                     cursor={{ strokeDasharray: '3 3' }}
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
@@ -325,27 +377,39 @@ export function ChaosAnalysisView({ cipher }: { cipher: "feistel" | "sdes" | "pr
           </CardContent>
           <div className="p-4 bg-background/40 border-t border-primary/5 flex items-center justify-between text-[10px] font-mono text-muted-foreground">
              <div className="flex gap-4">
-                <span className="flex items-center gap-1 group relative">
-                  <ShieldCheck className="w-3 h-3 text-emerald-500" /> 
-                  RECURSIVE ROUNDS
-                  <span className="absolute bottom-full left-0 mb-2 w-48 p-2 bg-popover text-[9px] rounded border border-border hidden group-hover:block z-50">
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <span className="flex items-center gap-1 cursor-help">
+                      <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                      RECURSIVE ROUNDS
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" sideOffset={4} align="center" className="w-56 text-[9px] leading-relaxed">
                     The cipher applies the same mathematical function multiple times (rounds) to build complexity.
-                  </span>
-                </span>
-                <span className="flex items-center gap-1 group relative">
-                  <AlertTriangle className="w-3 h-3 text-amber-500" /> 
-                  AVALANCHE SENSITIVITY
-                  <span className="absolute bottom-full left-0 mb-2 w-48 p-2 bg-popover text-[9px] rounded border border-border hidden group-hover:block z-50">
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <span className="flex items-center gap-1 cursor-help">
+                      <AlertTriangle className="w-3 h-3 text-amber-500" />
+                      AVALANCHE SENSITIVITY
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" sideOffset={4} align="center" className="w-56 text-[9px] leading-relaxed">
                     A tiny 1-bit change in input causes a massive, unpredictable jump in the decimal output.
-                  </span>
-                </span>
+                  </TooltipContent>
+                </Tooltip>
              </div>
-             <span className="flex items-center gap-1 group relative cursor-help text-right">
-               TYPE: DETERMINISTIC CHAOS
-               <span className="absolute bottom-full right-0 mb-2 w-56 p-2 bg-popover text-[9px] rounded border border-border hidden group-hover:block z-50">
+             <Tooltip delayDuration={0}>
+               <TooltipTrigger asChild>
+                 <span className="flex items-center gap-1 cursor-help text-right">
+                   TYPE: DETERMINISTIC CHAOS
+                 </span>
+               </TooltipTrigger>
+               <TooltipContent side="top" sideOffset={4} align="center" className="w-56 text-[9px] leading-relaxed">
                  A system governed by fixed rules (no randomness) that behaves in an unpredictable way without the key.
-               </span>
-             </span>
+               </TooltipContent>
+             </Tooltip>
           </div>
         </Card>
       </div>
@@ -372,37 +436,20 @@ export function ChaosAnalysisView({ cipher }: { cipher: "feistel" | "sdes" | "pr
                  />
                  <Button 
                    className="h-auto px-6 font-bold uppercase tracking-tighter shrink-0"
-                   disabled={!results || !predictionInput}
+                   disabled={!results || !predictionInput || isPredicting}
                    onClick={() => {
                      const val = Number(predictionInput);
                      if (isNaN(val)) return;
-                     
-                     // 1. Calculate True Output
-                     let trueC = 0;
-                     if (cipher === "feistel") {
-                        const bits = intToBits(val, 8);
-                        const state = runAllRounds(createInitialState(bits, DEFAULT_KEYS.length, DEFAULT_KEYS));
-                        trueC = bitsToInt([...state.L, ...state.R] as Bit[]);
-                     } else if (cipher === "sdes") {
-                        const bits = val.toString(2).padStart(8, '0').split('').map(b => parseInt(b) as Bit);
-                        const state = sdesEncrypt(bits, DEFAULT_SDES_KEY10 as Bit[]);
-                        trueC = parseInt(state.ciphertext.join(''), 2);
-                     } else {
-                        // PRESENT (64-bit input)
-                        const bits = val.toString(2).padStart(64, '0').split('').slice(-64).map(b => parseInt(b) as Bit);
-                        const state = presentEncrypt(bits, DEFAULT_PRESENT_KEY80 as Bit[], 4);
-                        // Convert bits to BigInt or keep as string for display
-                        trueC = Number(BigInt('0b' + state.ciphertext.join('')));
-                     }
-                     setTrueOutput(trueC);
-
-                     // 2. Model Prediction (Fixed pseudo-approximation based on MSE)
-                     const seed = Math.sin(val % 1000) * 10000;
-                     const noise = (seed - Math.floor(seed) - 0.5) * Math.sqrt(results?.mse || 100);
-                     setPredictionOutput(Math.abs(Math.round(trueC + noise)));
+                     handlePredict(val);
                    }}
                  >
-                   Predict <ArrowRight className="ml-2 w-4 h-4" />
+                   {isPredicting ? (
+                     <>
+                       Predicting... <RefreshCcw className="ml-2 w-4 h-4 animate-spin" />
+                     </>
+                   ) : (
+                     <>Predict <ArrowRight className="ml-2 w-4 h-4" /></>
+                   )}
                  </Button>
               </div>
             </div>
