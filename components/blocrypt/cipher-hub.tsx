@@ -250,7 +250,7 @@ export function CipherHub({ onStartCipher }: { onStartCipher: (cipher: "feistel"
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <Brain className="w-6 h-6 text-primary" />
-                <CardTitle className="text-2xl font-black tracking-tight">AI Attacker Performance Matrix</CardTitle>
+                <CardTitle className="text-2xl font-black tracking-tight">ML Performance Matrix</CardTitle>
               </div>
               <div className="flex gap-2">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20">
@@ -267,7 +267,7 @@ export function CipherHub({ onStartCipher }: { onStartCipher: (cipher: "feistel"
                 </div>
               </div>
             </div>
-            <CardDescription className="text-md font-medium leading-relaxed">Approximate attacker success rates for each model vs. algorithm. Lower values indicate stronger resistance.</CardDescription>
+            <CardDescription className="text-md font-medium leading-relaxed">Approximate success rates for each model vs. algorithm. Lower values indicate stronger resistance.</CardDescription>
           </CardHeader>
           <CardContent className="h-[400px] pt-4">
             <ResponsiveContainer width="100%" height="100%">

@@ -3,3 +3,5 @@ uvicorn
 pydantic
 numpy
 scikit-learn
+qrcode
+Pillow

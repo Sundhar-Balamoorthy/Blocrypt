@@ -55,6 +55,44 @@ export function WorksheetView({ cipher }: { cipher: "feistel" | "sdes" | "presen
     if (showFeedback) setShowFeedback(false);
   };
 
+  const BLOCRYPT_WEBSITE = "https://blocrypt.app";
+  const BLOCRYPT_LOGO_PATH = "/blocrypt-logo.png";
+
+  const fetchLogoDataUrl = async () => {
+    try {
+      const response = await fetch(BLOCRYPT_LOGO_PATH);
+      if (!response.ok) {
+        throw new Error(`Logo asset returned ${response.status}`);
+      }
+      const svgText = await response.text();
+      const svgDataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgText)}`;
+
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("Failed to load logo SVG image"));
+        img.src = svgDataUrl;
+      });
+
+      const size = Math.max(image.naturalWidth || 120, image.naturalHeight || 120, 120);
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("Canvas rendering context unavailable");
+      }
+      ctx.clearRect(0, 0, size, size);
+      ctx.drawImage(image, 0, 0, size, size);
+
+      return canvas.toDataURL("image/png");
+    } catch (error) {
+      console.warn("Unable to load Blocrypt logo for PDF export:", error);
+      return null;
+    }
+  };
+
   const handleDownloadPDF = async () => {
     if (!challenge) return;
     setIsExporting(true);
@@ -62,31 +100,50 @@ export function WorksheetView({ cipher }: { cipher: "feistel" | "sdes" | "presen
       const { jsPDF } = await import("jspdf");
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
       
       // Page 1: The Question
-      doc.setFillColor(30, 41, 59); // bg-slate-900 equivalent
-      doc.rect(0, 0, pageWidth, 297, 'F');
+      doc.setFillColor(255, 255, 255);
+      doc.rect(0, 0, pageWidth, pageHeight, 'F');
       
-      doc.setTextColor(255, 255, 255);
       doc.setFontSize(22);
-      doc.text("BLOCRYPT PRACTICE WORKSHEET", 20, 30);
+      doc.setTextColor(15, 23, 42);
+      doc.text("Blocrypt Practice Worksheet", 20, 30);
       
-      doc.setFontSize(12);
-      doc.setTextColor(148, 163, 184);
-      doc.text(`Cipher: ${challenge.cipher.toUpperCase()} | Difficulty: ${challenge.difficulty.toUpperCase()}`, 20, 40);
+      doc.setFontSize(9);
+      doc.setTextColor(92, 104, 124);
+      doc.text("Professional student worksheet · blocrypt.app", 20, 37);
       
-      doc.setDrawColor(51, 65, 85);
+      doc.setDrawColor(210, 216, 226);
       doc.line(20, 45, pageWidth - 20, 45);
       
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(14);
-      doc.text("QUESTION", 20, 60);
-      doc.setFontSize(11);
-      doc.setTextColor(203, 213, 225);
-      const splitDesc = doc.splitTextToSize(challenge.description, pageWidth - 40);
-      doc.text(splitDesc, 20, 70);
+      const logoX = pageWidth - 68;
+      const logoY = 18;
+      const logoSize = 48;
+      const logoDataUrl = await fetchLogoDataUrl();
+      if (logoDataUrl) {
+        doc.addImage(logoDataUrl, "SVG", logoX, logoY, logoSize, logoSize);
+      } else {
+        doc.setFillColor(15, 23, 42);
+        doc.rect(logoX, logoY, logoSize, logoSize, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(10);
+        doc.text("Blocrypt", logoX + 4, logoY + 26);
+      }
+      doc.link(logoX, logoY, logoSize, logoSize, { url: BLOCRYPT_WEBSITE });
+      doc.setFontSize(7);
+      doc.setTextColor(92, 104, 124);
+      doc.text("blocrypt.app", logoX, logoY + logoSize + 8);
       
-      doc.setTextColor(255, 255, 255);
+      doc.setTextColor(15, 23, 42);
+      doc.setFontSize(14);
+      doc.text("QUESTION", 20, 70);
+      doc.setFontSize(11);
+      doc.setTextColor(58, 65, 75);
+      const splitDesc = doc.splitTextToSize(challenge.description, pageWidth - 40);
+      doc.text(splitDesc, 20, 78);
+      
+      doc.setTextColor(15, 23, 42);
       doc.text("GIVEN PARAMETERS:", 20, 95);
       let yPos = 105;
       
@@ -117,31 +174,31 @@ export function WorksheetView({ cipher }: { cipher: "feistel" | "sdes" | "presen
         doc.setDrawColor(71, 85, 105);
         doc.rect(x, y, 12, 12);
         if (!challenge.hiddenIndices.includes(i)) {
+          doc.setTextColor(15, 23, 42);
           doc.text(bit.toString(), x + 4, y + 8);
         } else {
           doc.setTextColor(100, 116, 139);
           doc.text("?", x + 4, y + 8);
-          doc.setTextColor(255, 255, 255);
         }
       });
 
       // Page 2: Answer & Explanation
       doc.addPage();
-      doc.setFillColor(15, 23, 42); // Even darker
-      doc.rect(0, 0, pageWidth, 297, 'F');
+      doc.setFillColor(255, 255, 255);
+      doc.rect(0, 0, pageWidth, pageHeight, 'F');
       
-      doc.setTextColor(255, 255, 255);
       doc.setFontSize(18);
+      doc.setTextColor(15, 23, 42);
       doc.text("SOLUTION & EXPLANATION", 20, 30);
       
       doc.setFontSize(12);
-      doc.setTextColor(74, 222, 128); // Emerald-400
+      doc.setTextColor(15, 23, 42);
       doc.text(`Final Answer: [ ${challenge.answer.join(" ")} ]`, 20, 45);
       
-      doc.setDrawColor(30, 41, 59);
+      doc.setDrawColor(210, 216, 226);
       doc.line(20, 50, pageWidth - 20, 50);
       
-      doc.setTextColor(255, 255, 255);
+      doc.setTextColor(15, 23, 42);
       doc.setFontSize(14);
       doc.text("STEP-BY-STEP DERIVATION", 20, 65);
       
@@ -150,16 +207,16 @@ export function WorksheetView({ cipher }: { cipher: "feistel" | "sdes" | "presen
         challenge.explanationSteps.forEach((step, i) => {
           if (yPos > 260) {
             doc.addPage();
-            doc.setFillColor(15, 23, 42);
-            doc.rect(0, 0, pageWidth, 297, 'F');
+            doc.setFillColor(255, 255, 255);
+            doc.rect(0, 0, pageWidth, pageHeight, 'F');
             yPos = 30;
           }
           
-          doc.setTextColor(148, 163, 184);
+          doc.setTextColor(92, 104, 124);
           doc.setFontSize(10);
           doc.text(step.label.toUpperCase(), 20, yPos);
           
-          doc.setTextColor(255, 255, 255);
+          doc.setTextColor(34, 45, 60);
           doc.setFontSize(11);
           const splitStep = doc.splitTextToSize(step.details, pageWidth - 60);
           doc.text(splitStep, 25, yPos + 6);
@@ -203,6 +260,30 @@ export function WorksheetView({ cipher }: { cipher: "feistel" | "sdes" | "presen
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl">
+       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-[1.5rem] border border-border bg-card/90 p-5 shadow-sm">
+          <div className="flex items-start gap-4">
+             <div className="grid place-items-center h-14 w-14 rounded-2xl bg-primary text-primary-foreground shadow-sm">
+                <span className="text-xl font-black">B</span>
+             </div>
+             <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-[0.35em] text-muted-foreground font-mono">Blocrypt</p>
+                <h2 className="text-xl font-semibold text-foreground">Professional Worksheet</h2>
+                <p className="text-sm leading-6 text-muted-foreground max-w-2xl">This worksheet is formatted for classroom distribution and includes Blocrypt branding. Click the logo to visit the website.</p>
+             </div>
+          </div>
+          <a
+            href={BLOCRYPT_WEBSITE}
+            target="_blank"
+            rel="noreferrer"
+            className="group flex items-center gap-3 rounded-3xl border border-border bg-card p-2 shadow-sm transition hover:border-primary/60"
+          >
+             <img src="/blocrypt-logo.svg" alt="Blocrypt logo" className="h-24 w-24" />
+             <div className="text-right">
+                <p className="text-[10px] font-mono uppercase tracking-[0.35em] text-muted-foreground">Visit</p>
+                <p className="text-sm font-semibold text-foreground">blocrypt.app</p>
+             </div>
+          </a>
+       </div>
        {/* Difficulty & Controls */}
        <div className="flex items-center gap-4 flex-wrap">
           <div className="flex rounded-lg border border-border overflow-hidden bg-secondary/50 p-0.5">

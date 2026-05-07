@@ -4,9 +4,13 @@ FastAPI Backend for Blocrypt - Feistel Cipher ML Analysis
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Optional
+import io
 import numpy as np
+import qrcode
+import qrcode.image.svg
 from sklearn.model_selection import train_test_split, cross_validate
 
 from ml_models import (
@@ -342,6 +346,31 @@ async def train_batch(request: TrainingRequest):
         
         return results
     
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/qr")
+async def generate_qr(text: str = "https://blocrypt.app"):
+    """
+    Generate a QR code SVG for the requested text.
+    """
+    try:
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_Q,
+            box_size=10,
+            border=2,
+            image_factory=qrcode.image.svg.SvgPathImage,
+        )
+        qr.add_data(text)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+
+        buffer = io.BytesIO()
+        img.save(buffer)
+        buffer.seek(0)
+        return StreamingResponse(buffer, media_type="image/svg+xml")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
